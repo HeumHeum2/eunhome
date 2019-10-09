@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/homeItem"
+        android:icon="@drawable/ic_menu_home"
+        android:title="홈" />
+
+
+    <item
+        android:id="@+id/voiceItem"
+        android:icon="@drawable/ic_menu_mic"
+        android:title="음성인식" />
+
+    <item
+        android:id="@+id/alertItem"
+        android:icon="@drawable/ic_menu_alert"
+        android:title="알림" />
+
+    <item
+        android:id="@+id/settingsItem"
+        android:icon="@drawable/ic_menu_person"
+        android:title="설정" />
+
+</menu>

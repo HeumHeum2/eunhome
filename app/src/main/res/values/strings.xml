@@ -1,0 +1,37 @@
+<resources>
+    <string name="app_name">Eunhome</string>
+    <string name="login">로그인</string>
+    <string name="email">이메일</string>
+    <string name="password">비밀번호</string>
+    <string name="signup">가입하기</string>
+    <string name="foundpassword">비밀번호 찾기</string>
+    <string name="certification">이메일 인증하기</string>
+    <string name="Already_have_an_account">이미 계정이 있으십니까?</string>
+    <string name="emailAuth">인증번호를 입력해주세요.</string>
+    <string name="emailAuthOk">확인</string>
+    <string name="passwordcheck">비밀번호 확인</string>
+    <string name="name">이름</string>
+    <string name="phone">휴대폰번호 (01012341234)</string>
+    <string name="loding">로딩중입니다..</string>
+    <string name="deviceAdd">기기 추가</string>
+    <string name="DeviceCheck">장치를 등록해주세요.</string>
+    <string name="deviceSelect">등록하고 싶은 제품을 선택하세요.</string>
+    <string name="previous">이전</string>
+    <string name="next">다음</string>
+    <string name="wificonnet">가정 내의 Wi-Fi로 연결해주세요.</string>
+    <string name="wifiWarnnig">* 2.4GHz를 지원하는 공유기만 연결 가능합니다. \n* Wi-Fi 이름이 한글인 경우 기기 등록에 실패할 수도 있습니다. 다른 Wi-Fi에 연결하거나, 이름을 변경해주세요.</string>
+    <string name="wifiSSID">와이파이이름</string>
+    <string name="wifiCAP">[WPA-PSK-CCMP+TKIP][WPA2-PSK-CCMP+TKIP][ESS][WPS]</string>
+    <string name="wifiRSSI">와이파이 신호거리</string>
+    <string name="devicePairing">기기의 페어링 모드를 동작시켜 주세요.</string>
+    <string name="devicePairingLed">기기의 초록색 LED가 켜지면 페어링 모드로 동작합니다.\nLED가 켜지지 않으면 버튼을 3초 이상 길게 눌러주세요.</string>
+    <string name="deviceselection">기기를 선택해주세요.</string>
+    <string name="deviceguide">기기명이 나타날때까지 시간이 걸릴 수 있습니다.\n기기명 노출이 안될 시 새로고침 버튼을 눌러주세요.</string>
+    <string name="notfound">기기를 찾을 수 없습니다.</string>
+    <string name="deviceRegistering">기기 등록 중 입니다.</string>
+    <string name="deviceRegisteringWait">서버와의 통신으로 시간이 오래 걸릴 수 있습니다.\n완료 메시지가 나타날 때까지 기다려 주세요.</string>
+    <string name="welcome">%s 님 안녕하세요?</string>
+    <string name="finish">완료</string>
+    <string name="off">OFF</string>
+    <string name="on">ON</string>
+</resources>

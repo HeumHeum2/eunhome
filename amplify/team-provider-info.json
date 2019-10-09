@@ -1,0 +1,19 @@
+{
+    "android": {
+        "awscloudformation": {
+            "AuthRoleName": "eunhome-android-20191002204333-authRole",
+            "UnauthRoleArn": "arn:aws:iam::302433552232:role/eunhome-android-20191002204333-unauthRole",
+            "AuthRoleArn": "arn:aws:iam::302433552232:role/eunhome-android-20191002204333-authRole",
+            "Region": "ap-northeast-2",
+            "DeploymentBucketName": "eunhome-android-20191002204333-deployment",
+            "UnauthRoleName": "eunhome-android-20191002204333-unauthRole",
+            "StackName": "eunhome-android-20191002204333",
+            "StackId": "arn:aws:cloudformation:ap-northeast-2:302433552232:stack/eunhome-android-20191002204333/dd0e7790-e509-11e9-a919-0a86bceb3baa"
+        },
+        "categories": {
+            "auth": {
+                "eunhomeafb2cead": {}
+            }
+        }
+    }
+}
