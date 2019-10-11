@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/action_menu"
+        android:title="메뉴"
+        android:icon="@drawable/ic_search_white"
+        app:showAsAction="always|withText"/>
+    <item android:id="@+id/action_rename"
+        android:title="기기이름변경"
+        app:showAsAction="ifRoom"/>
+    <item android:id="@+id/action_setting"
+        android:title="설정"
+        app:showAsAction="ifRoom"/>
+
+</menu>

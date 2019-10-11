@@ -25,11 +25,13 @@ import com.amazonaws.amplify.generated.graphql.CreateUserMutation;
 import com.apollographql.apollo.GraphQLCall;
 import com.apollographql.apollo.api.Response;
 import com.apollographql.apollo.exception.ApolloException;
+import com.google.gson.Gson;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -44,6 +46,7 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
     private WifiManager wifiManager, wifiScanner;
     private List<ScanResult> scanDatas; // ScanResult List
     private int value = 0;
+    private SharedPreferences userinfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -176,7 +179,6 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
             }else{
                 Log.e(TAG, "onReceive: 와이파이 이전 값을 가져옴");
                 wifiScanner.startScan();
-
             }
         }
     };
@@ -216,8 +218,11 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
 
 
     private void save() {
-        SharedPreferences userinfo = getSharedPreferences("userinfo",MODE_PRIVATE);
-        String email = userinfo.getString("email",null);
+        userinfo = getSharedPreferences("userinfo",MODE_PRIVATE);
+        Gson gson = new Gson();
+        String json = userinfo.getString("user","");
+        UserInfo user = gson.fromJson(json, UserInfo.class);
+        String email = user.getEmail();
         ClientFactory.init(this); // AWSAppSyncClient 등록
         CreateUserInput input = CreateUserInput.builder()
                 .id(APssid)
@@ -303,6 +308,21 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
             textLoadingPercent.setText("100%");
             try {
                 Thread.sleep(500);
+                ArrayList<String> devices = new ArrayList<>();
+                devices.add(APssid);
+                ArrayList<String> devicesName = new ArrayList<>();
+                devicesName.add(device);
+
+                UserInfo userInfo = new UserInfo();
+                userInfo.setDevices(devices);
+                userInfo.setDevices_name(devicesName);
+
+                SharedPreferences.Editor editor = userinfo.edit();
+                Gson gson = new Gson();
+                String json = gson.toJson(userInfo);
+                editor.putString("device", json);
+                editor.apply();
+
                 Intent intent = new Intent(RegisteringDeviceActivity.this, RegisteringSuccessActivity.class);
                 intent.putExtra("device",device);
                 startActivity(intent);

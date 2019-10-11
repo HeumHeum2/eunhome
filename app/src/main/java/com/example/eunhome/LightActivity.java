@@ -1,11 +1,14 @@
 package com.example.eunhome;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,14 +21,15 @@ import com.amazonaws.mobileconnectors.iot.AWSIotMqttQos;
 import com.amazonaws.regions.Region;
 import com.amazonaws.services.iot.AWSIotClient;
 import com.amazonaws.services.iot.model.AttachPolicyRequest;
+import com.google.gson.Gson;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 
 public class LightActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String TAG = "LightActivity";
     private String topic = "topic/Light";
-    private TextView textLightStatus;
     private ImageView imgLightStatus;
     private AWSIotMqttManager mqttManager;
     private Button btLightPublish;
@@ -34,18 +38,49 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_light);
+
+        Gson gson = new Gson();
+        int position = getIntent().getIntExtra("position",9999);
+        SharedPreferences userinfo = getSharedPreferences("userinfo",MODE_PRIVATE);
+        String json = userinfo.getString("device","");
+        UserInfo user = gson.fromJson(json,UserInfo.class);
+        ArrayList<String> devicename = user.getDevices_name();
+
         ActionBar actionBar = getSupportActionBar();
-        actionBar.hide();
+        actionBar.setTitle(devicename.get(position)); // gson에서 기기별명을 가져온다.
+        actionBar.setDisplayHomeAsUpEnabled(true);
+
         init();
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        getMenuInflater().inflate(R.menu.device_setting, menu);
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        int id = item.getItemId();
+
+        if(id == R.id.action_menu){
+            Toast.makeText(this, "세팅 클릭",Toast.LENGTH_SHORT).show();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     private void init(){
-        textLightStatus = findViewById(R.id.textLightStatus);
         imgLightStatus = findViewById(R.id.imgLightStatus);
         btLightPublish = findViewById(R.id.btLightPublish);
-        mqtt();
-
         btLightPublish.setOnClickListener(this);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mqtt();
     }
 
     private void mqtt() {
@@ -94,6 +129,7 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
 
     public void subscribe() {
         Log.d(TAG, "topic = " + topic);
+        final String[] message = new String[1];
         try {
             mqttManager.subscribeToTopic(topic, AWSIotMqttQos.QOS0,
                     new AWSIotMqttNewMessageCallback() {
@@ -103,18 +139,17 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
                                 @Override
                                 public void run() {
                                     try {
-                                        String message = new String(data, "UTF-8");
+                                        message[0] = new String(data, "UTF-8");
                                         Log.d(TAG, "Message arrived:");
                                         Log.d(TAG, "Topic: " + topic);
-                                        Log.d(TAG, "Message: " + message);
-                                        if(message.equals("ON")){
+                                        Log.d(TAG, "Message: " + message[0]);
+                                        if(message[0].equals("ON")){
                                             imgLightStatus.setImageResource(R.drawable.ic_light_on);
                                             btLightPublish.setText(R.string.off);
                                         }else{
                                             imgLightStatus.setImageResource(R.drawable.ic_light_off);
                                             btLightPublish.setText(R.string.on);
                                         }
-                                        textLightStatus.setText(message);
                                     } catch (UnsupportedEncodingException e) {
                                         Log.e(TAG, "Message encoding error.", e);
                                     }
@@ -147,6 +182,16 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
             mqttManager.publishString(message, "inTopic", AWSIotMqttQos.QOS0);
         } catch (Exception e) {
             Log.e(TAG, "Publish error.", e);
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        try{
+            mqttManager.disconnect();
+        }catch (Exception e){
+            Log.e(TAG, "Disconnect error: ", e);
         }
     }
 }

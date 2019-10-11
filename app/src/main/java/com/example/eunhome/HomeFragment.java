@@ -8,7 +8,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -19,18 +18,10 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.amazonaws.amplify.generated.graphql.ListUsersQuery;
-import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers;
-import com.apollographql.apollo.GraphQLCall;
-import com.apollographql.apollo.api.Response;
-import com.apollographql.apollo.exception.ApolloException;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
-
-import javax.annotation.Nonnull;
-
-import static com.amazonaws.mobile.auth.core.internal.util.ThreadUtils.runOnUiThread;
 
 public class HomeFragment extends Fragment {
 
@@ -40,14 +31,16 @@ public class HomeFragment extends Fragment {
     private FloatingActionButton fabDeviceAdd;
     private RecyclerView userDeviceRecyclerView;
     private SharedPreferences userinfo;
-    private ArrayList<ListUsersQuery.Item> mUsers;
     private DeviceAdapter adapter;
-    private ProgressBar deviceLodingBar;
+    private ArrayList<String> devices;
+    private ArrayList<String> devicesName;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         userinfo = getContext().getSharedPreferences("userinfo",Context.MODE_PRIVATE);
+        devices = new ArrayList<>();
+        devicesName = new ArrayList<>();
     }
 
     @Override
@@ -66,20 +59,39 @@ public class HomeFragment extends Fragment {
         textWelcome = view.findViewById(R.id.textWelcome);
         textDeviceCheck = view.findViewById(R.id.textDeviceCheck);
         fabDeviceAdd = view.findViewById(R.id.fabDeviceAdd);
-        deviceLodingBar = view.findViewById(R.id.deviceLoadingbar);
+
+        Gson gson = new Gson();
+        String json = userinfo.getString("device","");
+        Log.d(TAG, "json: "+json);
+        UserInfo user = gson.fromJson(json, UserInfo.class);
+        devices = user.getDevices();
+        devicesName = user.getDevices_name();
+
+        try{
+            if(!devices.get(0).isEmpty()){
+                textDeviceCheck.setVisibility(View.GONE);
+            }
+        }catch (Exception e){
+            Log.e(TAG, "init: ",e);
+            textDeviceCheck.setVisibility(View.VISIBLE);
+        }
+
+        json = userinfo.getString("user","");
+        user = gson.fromJson(json, UserInfo.class);
+
+        textWelcome.setText(getString(R.string.welcome, user.getName()));
 
         userDeviceRecyclerView = view.findViewById(R.id.userDeviceRecyclerView);
         userDeviceRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new DeviceAdapter(getContext());
+        adapter.setItems(devices, devicesName);
         userDeviceRecyclerView.setAdapter(adapter);
+
 //        SwipeController swipeController = new SwipeController();
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback); // 나중에 swipeController로 바꿔줘야함.(스와이프로 삭제)
         itemTouchHelper.attachToRecyclerView(userDeviceRecyclerView);
 
-        textWelcome.setText(getString(R.string.welcome, userinfo.getString("name",null)));
-
         click();
-        ClientFactory.init(getContext());
     }
 
     private void click() {
@@ -101,7 +113,8 @@ public class HomeFragment extends Fragment {
         @Override
         public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
             final int position = viewHolder.getAdapterPosition();
-            mUsers.remove(position);
+            devices.remove(position);
+            devicesName.remove(position);
             adapter.notifyItemRemoved(position);
         }
     };
@@ -109,39 +122,5 @@ public class HomeFragment extends Fragment {
     @Override
     public void onResume(){
         super.onResume();
-        query();
     }
-
-    public void query(){
-        deviceLodingBar.setVisibility(View.VISIBLE);
-        ClientFactory.appSyncClient().query(ListUsersQuery.builder().build())
-                .responseFetcher(AppSyncResponseFetchers.CACHE_AND_NETWORK) //캐시를 가져옴
-                .enqueue(usersCallback);
-    }
-
-    private GraphQLCall.Callback<ListUsersQuery.Data> usersCallback = new GraphQLCall.Callback<ListUsersQuery.Data>() {
-        @Override
-        public void onResponse(@Nonnull Response<ListUsersQuery.Data> response) {
-            mUsers = new ArrayList<>(response.data().listUsers().items());
-            runOnUiThread(new Runnable(){
-                @Override
-                public void run() {
-                    adapter.setItems(mUsers);
-                    adapter.notifyDataSetChanged();
-                    if(mUsers.size() != 0){
-                        textDeviceCheck.setVisibility(View.GONE);
-                        deviceLodingBar.setVisibility(View.GONE);
-                    }else{
-                        textDeviceCheck.setVisibility(View.VISIBLE);
-                        deviceLodingBar.setVisibility(View.GONE);
-                    }
-                }
-            });
-        }
-
-        @Override
-        public void onFailure(@Nonnull ApolloException e) {
-            Log.e("ERROR", e.toString());
-        }
-    };
 }

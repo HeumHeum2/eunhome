@@ -42,7 +42,7 @@ public class RegisteringSuccessActivity extends AppCompatActivity{
     private void setting() {
         if(device.equals("Light")){
             imgDevice.setImageResource(R.drawable.ic_light_white);
-        }else if(device.equals("cctv")){
+        }else if(device.equals("CCTV")){
             imgDevice.setImageResource(R.drawable.ic_camera_white);
         }
         textDevice.setText(device);
@@ -52,10 +52,6 @@ public class RegisteringSuccessActivity extends AppCompatActivity{
         btDeviceClear.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                SharedPreferences userdeviceinfo = getSharedPreferences("userdeviceinfo", Context.MODE_PRIVATE);
-//                SharedPreferences.Editor editor = userdeviceinfo.edit();
-//                editor.putString("device", device);
-//                editor.apply();
                 Intent intent = new Intent(RegisteringSuccessActivity.this, MainActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);

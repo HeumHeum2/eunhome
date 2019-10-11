@@ -16,13 +16,22 @@ import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 
+import com.amazonaws.amplify.generated.graphql.ListUsersQuery;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
 import com.amazonaws.mobile.client.UserStateDetails;
 import com.amazonaws.mobile.client.results.SignInResult;
+import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers;
+import com.apollographql.apollo.GraphQLCall;
+import com.apollographql.apollo.api.Response;
+import com.apollographql.apollo.exception.ApolloException;
+import com.google.gson.Gson;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
+
+import javax.annotation.Nonnull;
 
 import static com.amazonaws.mobile.auth.core.internal.util.ThreadUtils.runOnUiThread;
 
@@ -32,6 +41,10 @@ public class LoginFragment extends Fragment {
     private EditText email, passwd;
     private Button btlogin;
     private TextView textSignup;
+    private UserInfo userInfo;
+    private SharedPreferences userinfo;
+    private SharedPreferences.Editor editor;
+    private Gson gson;
 
     //프로그래스 다이얼로그
     private com.example.eunhome.ProgressDialog progressDialog;
@@ -44,6 +57,7 @@ public class LoginFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        userinfo = getContext().getSharedPreferences("userinfo", Context.MODE_PRIVATE);
     }
 
     @Override
@@ -103,19 +117,19 @@ public class LoginFragment extends Fragment {
                                                 Map<String, String> userAttributes = AWSMobileClient.getInstance().getUserAttributes();
                                                 Log.d(TAG, "userAttributes: " + Arrays.toString(userAttributes.entrySet().toArray()));
                                                 Log.d(TAG, "onResult: "+userAttributes.get("name"));
-                                                SharedPreferences userinfo = getContext().getSharedPreferences("userinfo", Context.MODE_PRIVATE);
-                                                SharedPreferences.Editor editor = userinfo.edit();
-                                                editor.putString("email", userAttributes.get("email"));
-                                                editor.putString("name", userAttributes.get("name"));
-                                                editor.putString("phone_number", userAttributes.get("phone_number").replace("+",""));
+                                                editor = userinfo.edit();
+                                                gson = new Gson();
+                                                userInfo = new UserInfo();
+                                                userInfo.setEmail(userAttributes.get("email"));
+                                                userInfo.setName(userAttributes.get("name"));
+                                                userInfo.setPhone_number(userAttributes.get("phone_number").replace("+",""));
+                                                String json = gson.toJson(userInfo);
+                                                editor.putString("user", json);
                                                 editor.apply();
-                                                Looper.prepare();
-                                                Toast.makeText(getContext(),"로그인 되었습니다.",Toast.LENGTH_SHORT).show();
-                                                progressDialog.HideProgressDialog();
-                                                Intent intent = new Intent(getContext(), MainActivity.class);
-                                                startActivity(intent);
-                                                getActivity().finish();
-                                                Looper.loop();
+                                                ClientFactory.init(getContext());
+                                                ClientFactory.appSyncClient().query(ListUsersQuery.builder().build())
+                                                        .responseFetcher(AppSyncResponseFetchers.CACHE_AND_NETWORK) //캐시를 가져옴
+                                                        .enqueue(usersCallback);
                                             } catch (Exception e) {
                                                 e.printStackTrace();
                                             }
@@ -158,4 +172,41 @@ public class LoginFragment extends Fragment {
             });
         }
     }
+
+    private GraphQLCall.Callback<ListUsersQuery.Data> usersCallback = new GraphQLCall.Callback<ListUsersQuery.Data>() {
+        @Override
+        public void onResponse(@Nonnull Response<ListUsersQuery.Data> response) {
+            ArrayList<String> devices = new ArrayList<>();
+            ArrayList<String> devices_name = new ArrayList<>();
+            for(int i = 0 ; i < response.data().listUsers().items().size() ; i++){
+                if(email.getText().toString().trim().equals(response.data().listUsers().items().get(i).name())){
+                    devices.add(response.data().listUsers().items().get(i).id());
+                    devices_name.add(response.data().listUsers().items().get(i).device());
+                }
+            }
+            UserInfo user = new UserInfo();
+            user.setDevices(devices);
+            user.setDevices_name(devices_name);
+            String json = gson.toJson(user);
+            editor.putString("device", json);
+            editor.apply();
+            Looper.prepare();
+            Toast.makeText(getContext(),"로그인 되었습니다.",Toast.LENGTH_SHORT).show();
+            progressDialog.HideProgressDialog();
+            Intent intent = new Intent(getContext(), MainActivity.class);
+            startActivity(intent);
+            getActivity().finish();
+            Looper.loop();
+//            runOnUiThread(new Runnable(){
+//                @Override
+//                public void run() {
+//                }
+//            });
+        }
+
+        @Override
+        public void onFailure(@Nonnull ApolloException e) {
+            Log.e("ERROR", e.toString());
+        }
+    };
 }
