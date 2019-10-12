@@ -4,25 +4,28 @@
 #include <time.h>
 #include <FS.h>
 #include <ArduinoJson.h>
+#include <DHT.h>
+#include <DHT_U.h>
+
+#define PIN_DHT D4
 
 ESP8266WebServer server;
 //센서 연결
 uint8_t pin_led = 13;   // D7 = GPIO13
-uint8_t pin_red_led = 5; // D1 = GPIO5
+DHT DHTsensor(PIN_DHT, DHT11); // 온습도 센서 연결
 uint8_t button = 12; // D6 = GPIO12
 int btn = 0; // 버튼 클릭 값을 저장할 변수
 char* ch_value = "";
-char message[3];
 
 //AP - STA 모드 연결 위한 세팅
 char* ssid = "YOUR_SSID"; //굳이 설정해주지 않아도 됌.
-char* mySsid = "Light0000"; // AP ssid설정
+char* mySsid = "AirCon0000"; // AP ssid설정
 char* _status = "WIFI_AP";
 
 //AWS IoT를 위한 세팅
-const char *thingId = "Light";          // 사물 이름 (thing ID) 
+const char *thingId = "AirCon";          // 사물 이름 (thing ID) 
 const char *host = "a2lewy1etbgc6q-ats.iot.ap-northeast-2.amazonaws.com"; // AWS IoT Core 주소
-const char *topic = "topic/Light"; // 보낼 토픽
+const char *topic = "outTopic/AirCon"; // 보낼 토픽
 
 // 사물 인증서 (파일 이름: xxxxxxxxxx-certificate.pem.crt)
 const char cert_str[] PROGMEM = R"EOF(
@@ -106,12 +109,19 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
+  char message[length];
   for (int i = 0; i < length; i++) {
     message[i] = (char)payload[i];
   }
   Serial.print(message);
-  
   Serial.println();
+  
+//  int ret = strcmp(message, "ON");
+//  if(ret == 0){
+//    digitalWrite(pin_red_led, HIGH);
+//  }else{
+//    digitalWrite(pin_red_led, LOW);
+//  }
 }
 
 //AWS IoT 인증서 세팅
@@ -131,7 +141,7 @@ void reconnect() {
       // Once connected, publish an announcement...
       client.publish(topic, ch_value);
       // ... and resubscribe
-      client.subscribe("inTopic");
+      client.subscribe("inTopic/AirCon");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -222,7 +232,7 @@ function myFunction()
 void setup()
 {
   pinMode(pin_led, OUTPUT); // D7에 led 연결
-  pinMode(pin_red_led, OUTPUT); // D1에 led 연결
+  DHTsensor.begin();//온습도 센서
   pinMode(button,INPUT_PULLUP); // D2에 버튼 연결
   Serial.begin(115200); // 시리얼 통신 시작
   SPIFFS.begin(); // 파일시스템 시작
@@ -237,16 +247,9 @@ long lastMsg = 0;
 char msg[50];
 
 void loop()
-{
-  digitalWrite(pin_red_led, HIGH);
-  if(message == "ON "){
-    digitalWrite(pin_red_led, HIGH);
-    }else if(message == "OFF"){
-      digitalWrite(pin_red_led, LOW);
-    }
-     
+{    
   int btn = digitalRead(button);
-  delay(500);
+//  delay(500);
   if(btn == 0){ // 파일에 저장되어있는 값을 없애줘야함.
     DynamicJsonBuffer jSTABuffer;
     JsonObject& jObject = jSTABuffer.parseObject("");
@@ -271,17 +274,19 @@ void loop()
       
     if (now - lastMsg > 5000) { //5초마다 메시지를 보내겠다.
       lastMsg = now; // 현재 시간을 저장
-      if(digitalRead(pin_red_led) == LOW){
-        ch_value = "OFF";
-      }else{
-        ch_value = "ON";
-      }
-      snprintf (msg, 75, ch_value);
+      float temp = DHTsensor.readTemperature();
+      float humidity = DHTsensor.readHumidity();
+      
+      StaticJsonBuffer<200> jsonBuffer;
+      JsonObject& root = jsonBuffer.createObject();
+      root["tempvalue"] = temp;
+      root["humivalue"] = humidity;
+
+      root.printTo(msg);
+//      snprintf (msg, 75, ch_value);
       Serial.print("Publish message: ");
       Serial.println(msg);
       client.publish(topic, msg);
-//      Serial.print("Heap: ");
-//      Serial.println(ESP.getFreeHeap()); //Low heap can cause problems
     }
   }
   

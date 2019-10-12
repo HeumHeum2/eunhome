@@ -56,6 +56,7 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
     private SharedPreferences userinfo;
     private Gson gson;
     private ActionBar actionBar;
+    private boolean backcheck = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -187,13 +188,12 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
             @Override
             public void run() {
                 Log.d(TAG, "실행");
-                if(deviceProgressBar.getVisibility() == View.VISIBLE){
+                if(!backcheck && deviceProgressBar.getVisibility() == View.VISIBLE){
                     Toast.makeText(getApplicationContext(),"인터넷 신호가 약합니다. 다시 연결해주세요.",Toast.LENGTH_LONG).show();
                     Intent intent = new Intent(LightActivity.this, DeviceReConnectActivity.class);
                     intent.putExtra("device",device.get(position));
                     intent.putExtra("position",position);
                     startActivity(intent);
-                    finish();
                 }
             }
         }, 10000); // 시간설정
@@ -305,6 +305,13 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        backcheck = true;
+    }
+
+
     public void publish(String message) {
         try {
             mqttManager.publishString(message, inTopic, AWSIotMqttQos.QOS0);
@@ -322,4 +329,11 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
             Log.e(TAG, "Disconnect error: ", e);
         }
     }
+
+//    @Override
+//    protected void onNewIntent(Intent intent) {
+//        super.onNewIntent(intent);
+//        // getIntent() should always return the most recent
+//        setIntent(intent);
+//    }
 }

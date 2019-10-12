@@ -97,7 +97,7 @@ public class DeviceWiFiReFragment extends Fragment implements View.OnClickListen
         wifiManager = (WifiManager) getContext().getSystemService(Context.WIFI_SERVICE);
         arrayList.clear();
         IntentFilter intentFilter = new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
-        intentFilter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
+//        intentFilter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
         wifiLoadingbar.setVisibility(View.VISIBLE);
         textNotfound.setVisibility(View.GONE);
         getContext().registerReceiver(deviceReceiver, intentFilter);
@@ -110,7 +110,6 @@ public class DeviceWiFiReFragment extends Fragment implements View.OnClickListen
             Log.e(TAG, "onReceive check : "+intent.getAction());
             final String action = intent.getAction();
             if(action.equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)){
-                wifiManager.startScan();
                 scanDatas = wifiManager.getScanResults();
                 context.unregisterReceiver(this);
                 int check=0;
@@ -135,8 +134,6 @@ public class DeviceWiFiReFragment extends Fragment implements View.OnClickListen
                     textNotfound.setVisibility(View.GONE);
                 }
                 wifiLoadingbar.setVisibility(View.GONE);
-            }else if(action.equals(WifiManager.NETWORK_STATE_CHANGED_ACTION)){
-                getContext().sendBroadcast(new Intent("wifi.ON_NETWORK_STATE_CHANGED"));
             }
         }
     };
@@ -157,4 +154,11 @@ public class DeviceWiFiReFragment extends Fragment implements View.OnClickListen
         super.onResume();
         Log.e(TAG, "onResume ");
     }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.e(TAG, "onDestroy: 프레그먼트 꺼지는지 확인" );
+    }
+
 }

@@ -69,7 +69,7 @@ public class DeviceReConnectActivity extends AppCompatActivity {
         adapter.addItem(deviceWiFiReFragment);
         WiFiSettingReFragment wiFiSettingReFragment = new WiFiSettingReFragment();
         adapter.addItem(wiFiSettingReFragment);
-        pager.setOffscreenPageLimit(adapter.getCount()); // 페이지 올릴때마다 바꿔줘야함.
+//        pager.setOffscreenPageLimit(adapter.getCount()); // 페이지 올릴때마다 바꿔줘야함.
         pager.setAdapter(adapter);
 
         circleAnimIndicator = findViewById(R.id.circleDevice); // 뷰페이저 인디케이트 설정
@@ -130,6 +130,8 @@ public class DeviceReConnectActivity extends AppCompatActivity {
     }
 
     private void nextActivity() {
+        Log.e(TAG, "nextActivity: 혹시 너 들어와지니?" );
+        Log.e(TAG, "pagecheck : "+pagecheck);
         SharedPreferences wifi = getSharedPreferences("wifi",MODE_PRIVATE);
         SharedPreferences.Editor editor = wifi.edit();
         ssid = wifi.getString("ssid",null);
@@ -138,7 +140,6 @@ public class DeviceReConnectActivity extends AppCompatActivity {
         intent.putExtra("ssid",ssid);
         intent.putExtra("password",password);
         intent.putExtra("APssid",APssid);
-        intent.putExtra("device",device);
         intent.putExtra("position",getIntent().getIntExtra("position",9999));
         editor.clear();
         editor.apply();
@@ -213,5 +214,11 @@ public class DeviceReConnectActivity extends AppCompatActivity {
         }else{
             btNext.setEnabled(false);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.e(TAG, "onDestroy: 혹여나 남아있나 싶어서" );
     }
 }

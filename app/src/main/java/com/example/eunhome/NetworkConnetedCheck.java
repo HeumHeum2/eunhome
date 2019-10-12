@@ -1,12 +1,8 @@
 package com.example.eunhome;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.util.Log;
 
 public class NetworkConnetedCheck {
     private Context context;
@@ -18,8 +14,14 @@ public class NetworkConnetedCheck {
     public boolean isNetworkConnected(){
         ConnectivityManager manager = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = manager.getActiveNetworkInfo();
-        boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-
-        return isConnected;
+        if(activeNetwork != null){
+            int type = activeNetwork.getType();
+            if(type == ConnectivityManager.TYPE_MOBILE){//쓰리지나 LTE로 연결된것(모바일을 뜻한다.)
+                return true;
+            }else if(type == ConnectivityManager.TYPE_WIFI){//와이파이 연결된것
+                return true;
+            }
+        }
+        return false;  //연결이 되지않은 상태
     }
 }

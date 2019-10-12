@@ -14,8 +14,8 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.View;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
@@ -40,13 +40,11 @@ import type.CreateUserInput;
 
 public class RegisteringDeviceActivity extends AppCompatActivity {
     private static final String TAG = "RegisteringDeviceActivity";
-    private ProgressBar circularProgressbar;
-    private TextView textLoadingPercent;
     private String APssid, ssid, password, device;
     private WifiManager wifiManager, wifiScanner;
     private List<ScanResult> scanDatas; // ScanResult List
-    private int value = 0;
     private SharedPreferences userinfo;
+    private ProgressBar LoadingBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,8 +56,9 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
     }
 
     private void init(){
-        circularProgressbar = findViewById(R.id.circularProgressbar);
-        textLoadingPercent = findViewById(R.id.textLoadingPercent);
+        LoadingBar = findViewById(R.id.deviceLoadingbar);
+        LoadingBar.setVisibility(View.VISIBLE);
+
         APssid = getIntent().getStringExtra("APssid");
         ssid = getIntent().getStringExtra("ssid");
         password = getIntent().getStringExtra("password");
@@ -79,7 +78,7 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
         networkTask.execute();
     }
 
-    public class NetworkTask extends AsyncTask<Integer, Integer,String>{
+    public class NetworkTask extends AsyncTask<Void, Void,String>{
         private String url;
         private String ssid;
         private String password;
@@ -91,45 +90,18 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPreExecute(){
-            value = 0;
-            circularProgressbar.setProgress(value);
-            textLoadingPercent.setText(value+"%");
-        }
-
-        @Override
-        protected String doInBackground(Integer... values) {
-            while(!isCancelled()){
-                value++;
-                if(value >= 60){
-                    break;
-                }else{
-                    publishProgress(value);
-                }
-                try{
-                    Thread.sleep(100);
-                }catch (InterruptedException e){
-                    Log.e(TAG, "doInBackground: ",e);
-                }
-            }
+        protected String doInBackground(Void... values) {
             try {
                 //ssid, password 아두이노에 넘겨주기
                 JSONObject postDataParams = new JSONObject();
-                postDataParams.put("ssid",ssid);
-                postDataParams.put("password",password);
+                postDataParams.put("ssid", ssid);
+                postDataParams.put("password", password);
 
-                return RequestHandler.sendPost(url,postDataParams);
+                return RequestHandler.sendPost(url, postDataParams);
 
             } catch (Exception e) {
                 return e.getMessage();
             }
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
-            circularProgressbar.setProgress(values[0].intValue());
-            textLoadingPercent.setText(values[0].toString()+"%");
         }
 
         @Override
@@ -152,7 +124,7 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
         wifiScanner = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
-        getApplicationContext().registerReceiver(deviceReceiver, intentFilter);
+        getApplicationContext().registerReceiver(registeringReceiver, intentFilter);
         Handler delayHandler = new Handler();
         delayHandler.postDelayed(new Runnable() {
             @Override
@@ -167,10 +139,10 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
 //                }
                 wifiScanner.startScan();
             }
-         },18000);
+         },15000);
     }
 
-    private BroadcastReceiver deviceReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver registeringReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             boolean success = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false);
@@ -207,6 +179,7 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
                         break;
                     }
                 }
+                LoadingBar.setVisibility(View.GONE);
                 Toast.makeText(RegisteringDeviceActivity.this,"가정 내 와이파이를 다시 입력해주세요.", Toast.LENGTH_SHORT).show();
                 finish();
                 break;
@@ -216,7 +189,6 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
             save();
         }
     }
-
 
     private void save() {
         userinfo = getSharedPreferences("userinfo",MODE_PRIVATE);
@@ -241,8 +213,26 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    BackgroundTask backgroundTask = new BackgroundTask();
-                    backgroundTask.execute();
+                    LoadingBar.setVisibility(View.GONE);
+                    ArrayList<String> devices = new ArrayList<>();
+                    devices.add(APssid);
+                    ArrayList<String> devicesName = new ArrayList<>();
+                    devicesName.add(device);
+
+                    UserInfo userInfo = new UserInfo();
+                    userInfo.setDevices(devices);
+                    userInfo.setDevices_name(devicesName);
+
+                    SharedPreferences.Editor editor = userinfo.edit();
+                    Gson gson = new Gson();
+                    String json = gson.toJson(userInfo);
+                    editor.putString("device", json);
+                    editor.apply();
+
+                    Intent intent = new Intent(RegisteringDeviceActivity.this, RegisteringSuccessActivity.class);
+                    intent.putExtra("device",device);
+                    startActivity(intent);
+                    finish();
                 }
             });
         }
@@ -254,6 +244,7 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
                 public void run() {
                     Log.e(TAG, "Failed to perform AddUserMutation", e);
                     if(e.getLocalizedMessage().contains("failed due to conflict")){
+                        LoadingBar.setVisibility(View.GONE);
                         Toast.makeText(getApplicationContext(),"이미 등록한 기기 입니다.",Toast.LENGTH_SHORT).show();
                     }
                     RegisteringDeviceActivity.this.finish();
@@ -277,60 +268,9 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
         }
     };
 
-    class BackgroundTask extends AsyncTask<Integer, Integer, Integer> {
-
-        protected void onPreExecute() {
-            circularProgressbar.setProgress(value);
-        }
-
-        protected Integer doInBackground(Integer ... values) {
-            while (!isCancelled()) {
-                value++;
-                if (value >= 100) {
-                    break;
-                } else {
-                    publishProgress(value);
-                }
-
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException ex) {}
-            }
-            return value;
-        }
-
-        protected void onProgressUpdate(Integer ... values) {
-            circularProgressbar.setProgress(values[0]);
-            textLoadingPercent.setText(values[0].toString()+"%");
-        }
-
-        protected void onPostExecute(Integer result) {
-            circularProgressbar.setProgress(100);
-            textLoadingPercent.setText("100%");
-            try {
-                Thread.sleep(500);
-                ArrayList<String> devices = new ArrayList<>();
-                devices.add(APssid);
-                ArrayList<String> devicesName = new ArrayList<>();
-                devicesName.add(device);
-
-                UserInfo userInfo = new UserInfo();
-                userInfo.setDevices(devices);
-                userInfo.setDevices_name(devicesName);
-
-                SharedPreferences.Editor editor = userinfo.edit();
-                Gson gson = new Gson();
-                String json = gson.toJson(userInfo);
-                editor.putString("device", json);
-                editor.apply();
-
-                Intent intent = new Intent(RegisteringDeviceActivity.this, RegisteringSuccessActivity.class);
-                intent.putExtra("device",device);
-                startActivity(intent);
-                finish();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        getApplicationContext().unregisterReceiver(registeringReceiver);
     }
 }

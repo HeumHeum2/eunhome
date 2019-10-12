@@ -34,66 +34,42 @@ public class SplashActivity extends AppCompatActivity {
 
     private void start() {
 //        autologin();
-        AWSMobileClient.getInstance().initialize(getApplicationContext(), new Callback<UserStateDetails>() {
-            @Override
-            public void onResult(UserStateDetails userStateDetails) {
-                Log.i(TAG, userStateDetails.getUserState().toString());
-                switch (userStateDetails.getUserState()){
-                    case SIGNED_IN:
-                        Intent i = new Intent(SplashActivity.this, MainActivity.class);
-                        startActivity(i);
-                        finish();
-                        break;
-                    case SIGNED_OUT:
-                        showSignIn();
-                        break;
-                    default:
-                        AWSMobileClient.getInstance().signOut();
-                        showSignIn();
-                        break;
+//        NetworkConnetedCheck networkConnetedCheck = new NetworkConnetedCheck(getApplicationContext());
+//        if(networkConnetedCheck.isNetworkConnected()){
+//            Toast.makeText(this, "인터넷 연결을 해주세요.", Toast.LENGTH_SHORT).show();
+//            finish();
+//        }else{
+            AWSMobileClient.getInstance().initialize(getApplicationContext(), new Callback<UserStateDetails>() {
+                @Override
+                public void onResult(UserStateDetails userStateDetails) {
+                    Log.i(TAG, userStateDetails.getUserState().toString());
+                    switch (userStateDetails.getUserState()){
+                        case SIGNED_IN:
+                            Intent i = new Intent(SplashActivity.this, MainActivity.class);
+                            startActivity(i);
+                            finish();
+                            break;
+                        case SIGNED_OUT:
+                            showSignIn();
+                            break;
+                        default:
+                            AWSMobileClient.getInstance().signOut();
+                            showSignIn();
+                            break;
+                    }
                 }
-            }
 
-            @Override
-            public void onError(Exception e) {
-                Log.e(TAG, e.toString());
-            }
-        });
+                @Override
+                public void onError(Exception e) {
+                    Log.e(TAG, e.toString());
+                }
+            });
+//        }
     }
 
     private void showSignIn() {
         Intent intent = new Intent(SplashActivity.this,StartActivity.class);
         startActivity(intent);
         finish();
-//        try {
-//            AWSMobileClient.getInstance().showSignIn(this, SignInUIOptions.builder().nextActivity(MainActivity.class).logo(R.id.useLogo).backgroundColor(R.color.colorGreen).canCancel(false).build());
-//        } catch (Exception e) {
-//            Log.e(TAG, e.toString());
-//        }
     }
-
-//    //자동로그인
-//    private void autologin() {
-//        CognitoSettings cognitoSettings = new CognitoSettings(this);
-//        cognitoSettings.getUserPool().getCurrentUser().getDetailsInBackground(handler);
-//    }
-
-//    GetDetailsHandler handler = new GetDetailsHandler() {
-//        @Override
-//        public void onSuccess(final CognitoUserDetails list) {
-//            Log.e(TAG, "onSuccess: "+list.getAttributes().getAttributes());
-//            Toast.makeText(SplashActivity.this, "자동로그인 되었습니다.",Toast.LENGTH_SHORT).show();
-//            Intent intent = new Intent(SplashActivity.this, MainActivity.class);
-//            startActivity(intent);
-//            finish();
-//        }
-//
-//        @Override
-//        public void onFailure(final Exception exception) {
-//            Log.e(TAG, "onFailure: handler : "+exception.getLocalizedMessage());
-//            Intent intent = new Intent(SplashActivity.this, StartActivity.class);
-//            startActivity(intent);
-//            finish();
-//        }
-//    };
 }

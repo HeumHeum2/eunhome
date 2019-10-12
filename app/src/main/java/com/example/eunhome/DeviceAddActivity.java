@@ -33,6 +33,10 @@ public class DeviceAddActivity extends AppCompatActivity {
         integers.add(R.drawable.ic_linked_camera);
         list.add("CCTV");
 
+        integers.add(R.drawable.ic_toys);
+        list.add("AirCon");
+
+
         RecyclerView recyclerView = findViewById(R.id.deviceRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
