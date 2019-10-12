@@ -2,6 +2,7 @@ package com.example.eunhome;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,6 +35,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
         ImageView imgDevice;
         TextView textDevice;
         TextView textDeviceStatus;
+        long mLastClickTime = 0;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -55,6 +57,11 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
 
         @Override
         public void onClick(View v) {
+            if(SystemClock.elapsedRealtime() - mLastClickTime < 1000){
+                return;
+            } // 중복클릭 막기
+            mLastClickTime = SystemClock.elapsedRealtime();
+
             Log.e(TAG, "onClick: "+textDeviceStatus.getText().toString());
             Log.e(TAG, "onClick: "+textDevice.getText().toString());
             String device = textDeviceStatus.getText().toString();

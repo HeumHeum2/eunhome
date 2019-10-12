@@ -20,8 +20,8 @@ import com.gun0912.tedpermission.TedPermission;
 
 import java.util.List;
 
-public class DeviceSettingActivity extends AppCompatActivity {
-    private static final String TAG = "DeviceViceSettingActivity";
+public class DeviceReConnectActivity extends AppCompatActivity {
+    private static final String TAG = "DeviceReConnectActivity";
 
     private NonSwipeableViewPager pager;
     private CircleAnimIndicator circleAnimIndicator;
@@ -46,7 +46,7 @@ public class DeviceSettingActivity extends AppCompatActivity {
 
         //액션바 셜정
         ActionBar actionBar = getSupportActionBar();
-        actionBar.setTitle("기기 추가");
+        actionBar.setTitle("인터넷 연결");
 
         //액션바 뒤로가기 설정
         actionBar.setDisplayHomeAsUpEnabled(true);
@@ -65,10 +65,10 @@ public class DeviceSettingActivity extends AppCompatActivity {
         //프래그먼트 세팅
         DevicesAPCheckFragment devicesAPCheckFragment = new DevicesAPCheckFragment();
         adapter.addItem(devicesAPCheckFragment);
-        DeviceWiFiSettingFragment deviceWiFiSettingFragment = new DeviceWiFiSettingFragment();
-        adapter.addItem(deviceWiFiSettingFragment);
-        WiFiSettingFragment wifisetting = new WiFiSettingFragment();
-        adapter.addItem(wifisetting);
+        DeviceWiFiReFragment deviceWiFiReFragment = new DeviceWiFiReFragment();
+        adapter.addItem(deviceWiFiReFragment);
+        WiFiSettingReFragment wiFiSettingReFragment = new WiFiSettingReFragment();
+        adapter.addItem(wiFiSettingReFragment);
         pager.setOffscreenPageLimit(adapter.getCount()); // 페이지 올릴때마다 바꿔줘야함.
         pager.setAdapter(adapter);
 
@@ -134,11 +134,12 @@ public class DeviceSettingActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = wifi.edit();
         ssid = wifi.getString("ssid",null);
         password = wifi.getString("password",null);
-        Intent intent = new Intent(DeviceSettingActivity.this, RegisteringDeviceActivity.class);
+        Intent intent = new Intent(DeviceReConnectActivity.this, DeviceRegisteringReActivity.class);
         intent.putExtra("ssid",ssid);
         intent.putExtra("password",password);
         intent.putExtra("APssid",APssid);
         intent.putExtra("device",device);
+        intent.putExtra("position",getIntent().getIntExtra("position",9999));
         editor.clear();
         editor.apply();
         pagecheck = 2; // 다시 다음버튼을 눌렀을 때 이동 시켜줘야함.

@@ -21,12 +21,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"> <!-- 안드로이드 api 28 부터는 http는 차단시키기 때문에 허용시켜줘야함 -->
+        <service android:name="org.eclipse.paho.android.service.MqttService" />
+
         <activity android:name=".CCTVActivity"></activity>
+        <activity android:name=".DeviceRegisteringReActivity"/>
         <activity
             android:name=".LightActivity"
             android:parentActivityName=".MainActivity" />
-        <service android:name="org.eclipse.paho.android.service.MqttService" />
-
+        <activity android:name=".DeviceReConnectActivity"/>
         <activity android:name=".RegisteringSuccessActivity" />
         <activity android:name=".RegisteringDeviceActivity" />
         <activity

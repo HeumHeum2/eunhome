@@ -21,25 +21,15 @@ import android.widget.Toast;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.amazonaws.amplify.generated.graphql.CreateUserMutation;
-import com.apollographql.apollo.GraphQLCall;
-import com.apollographql.apollo.api.Response;
-import com.apollographql.apollo.exception.ApolloException;
-import com.google.gson.Gson;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Nonnull;
-
-import type.CreateUserInput;
-
-public class RegisteringDeviceActivity extends AppCompatActivity {
-    private static final String TAG = "RegisteringDeviceActivity";
+public class DeviceRegisteringReActivity extends AppCompatActivity {
+    private static final String TAG = "DeviceRegisteringReActivity";
     private ProgressBar circularProgressbar;
     private TextView textLoadingPercent;
     private String APssid, ssid, password, device;
@@ -207,60 +197,16 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
                         break;
                     }
                 }
-                Toast.makeText(RegisteringDeviceActivity.this,"가정 내 와이파이를 다시 입력해주세요.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(DeviceRegisteringReActivity.this,"가정 내 와이파이를 다시 입력해주세요.", Toast.LENGTH_SHORT).show();
                 finish();
                 break;
             }
         }
         if(!status.equals("APmode")){
-            save();
+            BackgroundTask backgroundTask = new BackgroundTask();
+            backgroundTask.execute();
         }
     }
-
-
-    private void save() {
-        userinfo = getSharedPreferences("userinfo",MODE_PRIVATE);
-        Gson gson = new Gson();
-        String json = userinfo.getString("user","");
-        UserInfo user = gson.fromJson(json, UserInfo.class);
-        String email = user.getEmail();
-        ClientFactory.init(this); // AWSAppSyncClient 등록
-        CreateUserInput input = CreateUserInput.builder()
-                .id(APssid)
-                .name(email)
-                .device(device)
-                .build();
-        CreateUserMutation addUserMutation = CreateUserMutation.builder().input(input).build();
-        ClientFactory.appSyncClient().mutate(addUserMutation).enqueue(mutateCallback);
-    }
-
-    //DB 저장(dynomoDB)
-    private GraphQLCall.Callback<CreateUserMutation.Data> mutateCallback = new GraphQLCall.Callback<CreateUserMutation.Data>() {
-        @Override
-        public void onResponse(@Nonnull final Response<CreateUserMutation.Data> response) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    BackgroundTask backgroundTask = new BackgroundTask();
-                    backgroundTask.execute();
-                }
-            });
-        }
-
-        @Override
-        public void onFailure(@Nonnull final ApolloException e) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.e(TAG, "Failed to perform AddUserMutation", e);
-                    if(e.getLocalizedMessage().contains("failed due to conflict")){
-                        Toast.makeText(getApplicationContext(),"이미 등록한 기기 입니다.",Toast.LENGTH_SHORT).show();
-                    }
-                    RegisteringDeviceActivity.this.finish();
-                }
-            });
-        }
-    };
 
     //권한 리스너
     PermissionListener permissionlistener = new PermissionListener() {
@@ -307,30 +253,12 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
         protected void onPostExecute(Integer result) {
             circularProgressbar.setProgress(100);
             textLoadingPercent.setText("100%");
-            try {
-                Thread.sleep(500);
-                ArrayList<String> devices = new ArrayList<>();
-                devices.add(APssid);
-                ArrayList<String> devicesName = new ArrayList<>();
-                devicesName.add(device);
-
-                UserInfo userInfo = new UserInfo();
-                userInfo.setDevices(devices);
-                userInfo.setDevices_name(devicesName);
-
-                SharedPreferences.Editor editor = userinfo.edit();
-                Gson gson = new Gson();
-                String json = gson.toJson(userInfo);
-                editor.putString("device", json);
-                editor.apply();
-
-                Intent intent = new Intent(RegisteringDeviceActivity.this, RegisteringSuccessActivity.class);
-                intent.putExtra("device",device);
-                startActivity(intent);
-                finish();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            Toast.makeText(DeviceRegisteringReActivity.this, "연결되었습니다.", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(DeviceRegisteringReActivity.this, LightActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            intent.putExtra("position",getIntent().getIntExtra("position",9999));
+            startActivity(intent);
+            finish();
         }
     }
 }
