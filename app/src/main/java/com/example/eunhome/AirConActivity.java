@@ -54,7 +54,7 @@ public class AirConActivity extends AppCompatActivity implements View.OnClickLis
     private ArrayList<String> devicename;
     private ProgressBar deviceProgressBar;
     private int position;
-    private String changeDeviceName, powerstatus;
+    private String changeDeviceName, powerstatus="" , tempstatus;
     private SharedPreferences userinfo;
     private Gson gson;
     private ActionBar actionBar;
@@ -102,8 +102,11 @@ public class AirConActivity extends AppCompatActivity implements View.OnClickLis
         PowerON.setVisibility(View.INVISIBLE);
         PowerOFF.setVisibility(View.INVISIBLE);
         PowerSet.setVisibility(View.INVISIBLE);
+
         SharedTemp = getSharedPreferences("temp",MODE_PRIVATE);
-        textTempSetting.setText(SharedTemp.getString("tempset","24"));
+        tempstatus = SharedTemp.getString("tempset","24");
+
+        textTempSetting.setText(tempstatus);
 
         fbtnAdd.setOnClickListener(this);
         fbtnMinus.setOnClickListener(this);
@@ -172,6 +175,8 @@ public class AirConActivity extends AppCompatActivity implements View.OnClickLis
                     Log.d(TAG, "Connection Status :  "+status);
                     if(status.toString().equals("Connected")){
                         subscribe();
+                    }else if(status.toString().equals("Reconnecting")){
+                        mqttManager.disconnect();
                     }
                 }
             });
@@ -237,7 +242,7 @@ public class AirConActivity extends AppCompatActivity implements View.OnClickLis
 
     private void publish() {
         try {
-            mqttManager.publishString(textTempSetting.getText().toString(), inTopic, AWSIotMqttQos.QOS0);
+            mqttManager.publishString(tempstatus, inTopic, AWSIotMqttQos.QOS0);
         } catch (Exception e) {
             Log.e(TAG, "Publish error.", e);
         }
@@ -305,8 +310,13 @@ public class AirConActivity extends AppCompatActivity implements View.OnClickLis
     protected void onStop() {
         super.onStop();
         try{
-            mqttManager.disconnect();
-            backcheck = true;
+            if(powerstatus.equals("ON") || powerstatus.isEmpty()){
+                Log.e(TAG, "onStop:");
+                mqttManager.disconnect();
+                backcheck = true;
+            }else{
+                backcheck = false;
+            }
         }catch (Exception e){
             Log.e(TAG, "Disconnect error: ", e);
         }
@@ -356,19 +366,21 @@ public class AirConActivity extends AppCompatActivity implements View.OnClickLis
 
     @Override
     public void onClick(View v) {
-        int tempset = Integer.parseInt(textTempSetting.getText().toString());
+        int tempset = Integer.parseInt(tempstatus);
         SharedPreferences.Editor editor = SharedTemp.edit();
         switch (v.getId()){
             case R.id.fbtnAdd :
                 ++tempset;
-                textTempSetting.setText(Integer.toString(tempset));
-                editor.putString("tempset",Integer.toString(tempset));
+                tempstatus = Integer.toString(tempset);
+                textTempSetting.setText(tempstatus);
+                editor.putString("tempset",tempstatus);
                 editor.apply();
                 break;
             case R.id.fbtnMinus :
                 --tempset;
-                textTempSetting.setText(Integer.toString(tempset));
-                editor.putString("tempset",Integer.toString(tempset));
+                tempstatus = Integer.toString(tempset);
+                textTempSetting.setText(tempstatus);
+                editor.putString("tempset",tempstatus);
                 editor.apply();
                 break;
             case R.id.btnPower :
