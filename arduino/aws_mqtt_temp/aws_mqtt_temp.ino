@@ -14,7 +14,7 @@ ESP8266WebServer server;
 //센서 연결
 DHT DHTsensor(PIN_DHT, DHT11); // 온습도 센서 연결
 uint8_t pin_led = 13;   // D7 = GPIO13
-uint8_t pin_yello_led = 14; // D5 = GPI14
+uint8_t pin_yellow_led = 14; // D5 = GPI14
 uint8_t button = 12; // D6 = GPIO12
 int btn = 0; // 버튼 클릭 값을 저장할 변수
 char* ch_value = ""; // 전원 확인 값
@@ -120,11 +120,21 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print(message);
   Serial.println();
   
-  int ret = strcmp(message, "ON");
+  int ret = strcmp(message, "OFF");
   if(ret == 0){
-    digitalWrite(pin_yello_led, HIGH);
-  }else if(strcmp(message, "OFF") == 0){
-    digitalWrite(pin_yello_led, LOW);
+    digitalWrite(pin_yellow_led, LOW);
+    //모터 종료
+  }else{
+    digitalWrite(pin_yellow_led, HIGH);
+    float tempSet;
+    tempSet = atof(message);
+    if(temp > tempSet){ // 현재온도 > 설정온도
+      Serial.println("현재온도 > 설정온도");
+      //모터 속도 빠르게
+    }else{ // 현재온도 == 설정온도 || 현재온도 < 설정온도
+      Serial.println("현재온도 == 설정온도 || 현재온도 < 설정온도");
+      //모터 속도 천천히
+    }
   }
 }
 
@@ -243,7 +253,7 @@ function myFunction()
 void setup()
 {
   pinMode(pin_led, OUTPUT); // D7에 led 연결
-  pinMode(pin_yello_led, OUTPUT); // 전원 확인 센서
+  pinMode(pin_yellow_led, OUTPUT); // 전원 확인 센서
   
   DHTsensor.begin();//온습도 센서
   pinMode(button,INPUT_PULLUP); // D2에 버튼 연결
@@ -288,18 +298,16 @@ void loop()
       
     if (now - lastMsg > 5000) { //5초마다 메시지를 보내겠다.
       lastMsg = now; // 현재 시간을 저장
-      if(digitalRead(pin_yello_led) == LOW){
+      if(digitalRead(pin_yellow_led) == LOW){
         ch_value = "OFF";
+        snprintf (msg, 75, ch_value);
+        Serial.print("Publish message: ");
+        Serial.println(msg);
+        client.publish(topic, msg);
       }else{
-        ch_value = "ON";
-      }
-      snprintf(message, 75, ch_value);
-      client.publish(topic,message);
-      
-      if(ch_value == "ON"){
         temp = DHTsensor.readTemperature(); // 온도 값
         humidity = DHTsensor.readHumidity(); // 습도 값
-      
+ 
         StaticJsonBuffer<200> jsonBuffer;
         JsonObject& root = jsonBuffer.createObject();
         root["tempvalue"] = temp;

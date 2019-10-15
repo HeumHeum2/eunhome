@@ -10,6 +10,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -17,6 +18,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.amazonaws.amplify.generated.graphql.UpdateUserMutation;
 import com.amazonaws.mobile.client.AWSMobileClient;
@@ -30,6 +32,7 @@ import com.amazonaws.services.iot.model.AttachPolicyRequest;
 import com.apollographql.apollo.GraphQLCall;
 import com.apollographql.apollo.api.Response;
 import com.apollographql.apollo.exception.ApolloException;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.gson.Gson;
 
 import org.json.JSONException;
@@ -42,7 +45,7 @@ import javax.annotation.Nonnull;
 
 import type.UpdateUserInput;
 
-public class AirConActivity extends AppCompatActivity {
+public class AirConActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "AirConActivity";
     private String topic = "outTopic/AirCon";
     private String inTopic = "inTopic/AirCon";
@@ -51,12 +54,16 @@ public class AirConActivity extends AppCompatActivity {
     private ArrayList<String> devicename;
     private ProgressBar deviceProgressBar;
     private int position;
-    private String changeDeviceName;
+    private String changeDeviceName, powerstatus;
     private SharedPreferences userinfo;
     private Gson gson;
     private ActionBar actionBar;
     private boolean backcheck = false;
-    private TextView textTemp, textHumi, textnowTemp, textnowHumi, textTempSetting, textCelsius;
+    private TextView textTemp, textHumi, textTempSetting;
+    private FloatingActionButton fbtnAdd, fbtnMinus;
+    private ConstraintLayout PowerOFF, PowerON, PowerSet;
+    private ImageButton btnPower;
+    private SharedPreferences SharedTemp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,21 +88,26 @@ public class AirConActivity extends AppCompatActivity {
     private void init(){
         deviceProgressBar = findViewById(R.id.airconProgressBar);
 
+        PowerOFF = findViewById(R.id.PowerOFF);
+        PowerON = findViewById(R.id.PowerON);
+        PowerSet = findViewById(R.id.PowerSet);
+
         textTemp = findViewById(R.id.textTemp);
         textHumi = findViewById(R.id.textHumi);
-        textnowTemp = findViewById(R.id.textnowTemp);
-        textnowHumi = findViewById(R.id.textnowHumi);
         textTempSetting = findViewById(R.id.textTempSetting);
-        textCelsius = findViewById(R.id.textCelsius);
+        fbtnAdd = findViewById(R.id.fbtnAdd);
+        fbtnMinus = findViewById(R.id.fbtnMinus);
+        btnPower = findViewById(R.id.btnPower);
 
-        textTemp.setVisibility(View.INVISIBLE);
-        textHumi.setVisibility(View.INVISIBLE);
-        textnowTemp.setVisibility(View.INVISIBLE);
-        textnowHumi.setVisibility(View.INVISIBLE);
-        textTempSetting.setVisibility(View.INVISIBLE);
-        textCelsius.setVisibility(View.INVISIBLE);
+        PowerON.setVisibility(View.INVISIBLE);
+        PowerOFF.setVisibility(View.INVISIBLE);
+        PowerSet.setVisibility(View.INVISIBLE);
+        SharedTemp = getSharedPreferences("temp",MODE_PRIVATE);
+        textTempSetting.setText(SharedTemp.getString("tempset","24"));
 
-//        btLightPublish.setOnClickListener(this);
+        fbtnAdd.setOnClickListener(this);
+        fbtnMinus.setOnClickListener(this);
+        btnPower.setOnClickListener(this);
     }
 
     //액션바 세팅
@@ -180,23 +192,34 @@ public class AirConActivity extends AppCompatActivity {
                                 @Override
                                 public void run() {
                                     try {
+                                        PowerSet.setVisibility(View.VISIBLE);
                                         String message = new String(data, "UTF-8");
                                         Log.d(TAG, "Message arrived:");
                                         Log.d(TAG, "Topic: " + topic);
                                         Log.d(TAG, "Message: " + message);
-                                        JSONObject jsonObject = new JSONObject(message);
-                                        String temp = jsonObject.getString("tempvalue");
-                                        String humi = jsonObject.getString("humivalue");
-                                        Log.d(TAG, "temp: "+temp);
-                                        Log.d(TAG, "humi: "+humi);
-                                        textTemp.setText(getString(R.string.temp, temp));
-                                        textHumi.setText(getString(R.string.humi, humi));
-                                        textTemp.setVisibility(View.VISIBLE);
-                                        textHumi.setVisibility(View.VISIBLE);
-                                        textnowTemp.setVisibility(View.VISIBLE);
-                                        textnowHumi.setVisibility(View.VISIBLE);
-                                        textTempSetting.setVisibility(View.VISIBLE);
-                                        textCelsius.setVisibility(View.VISIBLE);
+                                        if(message.equals("OFF")){
+                                            PowerON.setVisibility(View.GONE);
+                                            PowerOFF.setVisibility(View.VISIBLE);
+                                            btnPower.setImageResource(R.drawable.ic_power_off);
+
+                                            powerstatus = "ON";
+                                        }else {
+                                            JSONObject jsonObject = new JSONObject(message);
+                                            String temp = jsonObject.getString("tempvalue");
+                                            String humi = jsonObject.getString("humivalue");
+                                            Log.d(TAG, "temp: " + temp);
+                                            Log.d(TAG, "humi: " + humi);
+                                            textTemp.setText(getString(R.string.temp, temp));
+                                            textHumi.setText(getString(R.string.humi, humi));
+
+                                            btnPower.setImageResource(R.drawable.ic_power_on);
+                                            PowerON.setVisibility(View.VISIBLE);
+                                            PowerOFF.setVisibility(View.GONE);
+
+                                            powerstatus = "OFF";
+
+                                            publish();
+                                        }
                                         deviceProgressBar.setVisibility(View.GONE);
                                     } catch (UnsupportedEncodingException e) {
                                         Log.e(TAG, "Message encoding error.", e);
@@ -212,6 +235,14 @@ public class AirConActivity extends AppCompatActivity {
         }
     }
 
+    private void publish() {
+        try {
+            mqttManager.publishString(textTempSetting.getText().toString(), inTopic, AWSIotMqttQos.QOS0);
+        } catch (Exception e) {
+            Log.e(TAG, "Publish error.", e);
+        }
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -220,7 +251,7 @@ public class AirConActivity extends AppCompatActivity {
             @Override
             public void run() {
                 Log.d(TAG, "실행");
-                if(!backcheck && deviceProgressBar.getVisibility() == View.VISIBLE){
+                if(!backcheck && PowerSet.getVisibility() == View.INVISIBLE){
                     Toast.makeText(getApplicationContext(),"인터넷 신호가 약합니다. 다시 연결해주세요.",Toast.LENGTH_LONG).show();
                     Intent intent = new Intent(AirConActivity.this, DeviceReConnectActivity.class);
                     intent.putExtra("device",device.get(position));
@@ -322,4 +353,38 @@ public class AirConActivity extends AppCompatActivity {
 
         }
     };
+
+    @Override
+    public void onClick(View v) {
+        int tempset = Integer.parseInt(textTempSetting.getText().toString());
+        SharedPreferences.Editor editor = SharedTemp.edit();
+        switch (v.getId()){
+            case R.id.fbtnAdd :
+                ++tempset;
+                textTempSetting.setText(Integer.toString(tempset));
+                editor.putString("tempset",Integer.toString(tempset));
+                editor.apply();
+                break;
+            case R.id.fbtnMinus :
+                --tempset;
+                textTempSetting.setText(Integer.toString(tempset));
+                editor.putString("tempset",Integer.toString(tempset));
+                editor.apply();
+                break;
+            case R.id.btnPower :
+                publishPower();
+                break;
+        }
+    }
+
+    private void publishPower(){
+        try {
+            PowerON.setVisibility(View.INVISIBLE);
+            PowerOFF.setVisibility(View.INVISIBLE);
+            deviceProgressBar.setVisibility(View.VISIBLE);
+            mqttManager.publishString(powerstatus, inTopic, AWSIotMqttQos.QOS0);
+        } catch (Exception e) {
+            Log.e(TAG, "Publish error.", e);
+        }
+    }
 }

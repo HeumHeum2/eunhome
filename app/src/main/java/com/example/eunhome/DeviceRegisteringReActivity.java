@@ -117,14 +117,6 @@ public class DeviceRegisteringReActivity extends AppCompatActivity {
         delayHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-//                if(wifiScanner.isScanAlwaysAvailable()) {
-//                    Log.e(TAG, "와이파이 활성화");
-//                    wifiScanner.startScan();
-//                }else{
-//                    Log.e(TAG, "와이파이 비활성화");
-//                    wifiScanner.setWifiEnabled(true);
-//                    scanWifi();
-//                }
                 wifiScanner.startScan();
             }
          },20000);
@@ -174,7 +166,14 @@ public class DeviceRegisteringReActivity extends AppCompatActivity {
         if(!status.equals("APmode")){
             LoadingBar.setVisibility(View.GONE);
             Toast.makeText(DeviceRegisteringReActivity.this, "연결되었습니다.", Toast.LENGTH_LONG).show();
-            Intent intent = new Intent(DeviceRegisteringReActivity.this, LightActivity.class);
+            Intent intent = null;
+            if(APssid.contains("Light")){
+                intent = new Intent(DeviceRegisteringReActivity.this, LightActivity.class);
+            }else if(APssid.contains("CCTV")){
+                intent = new Intent(DeviceRegisteringReActivity.this, CCTVActivity.class);
+            }else if(APssid.contains("AirCon")){
+                intent = new Intent(DeviceRegisteringReActivity.this, AirConActivity.class);
+            }
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             intent.putExtra("position",getIntent().getIntExtra("position",9999));
             startActivity(intent);
