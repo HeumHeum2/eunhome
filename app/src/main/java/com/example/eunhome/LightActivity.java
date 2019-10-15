@@ -159,7 +159,7 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
         imgLightStatus.setVisibility(View.INVISIBLE);
         btLightPublish = findViewById(R.id.btLightPublish);
         btLightPublish.setVisibility(View.INVISIBLE);
-        deviceProgressBar = findViewById(R.id.deviceProgressBar);
+        deviceProgressBar = findViewById(R.id.lightProgressBar);
 
         btLightPublish.setOnClickListener(this);
     }
@@ -167,8 +167,8 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
     @Override
     protected void onStart() {
         super.onStart();
+        backcheck = false;
         mqtt();
-
     }
 
     private void mqtt() {
@@ -325,15 +325,9 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
         super.onStop();
         try{
             mqttManager.disconnect();
+            backcheck = true;
         }catch (Exception e){
             Log.e(TAG, "Disconnect error: ", e);
         }
     }
-
-//    @Override
-//    protected void onNewIntent(Intent intent) {
-//        super.onNewIntent(intent);
-//        // getIntent() should always return the most recent
-//        setIntent(intent);
-//    }
 }

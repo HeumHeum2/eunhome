@@ -127,7 +127,7 @@ public class DeviceRegisteringReActivity extends AppCompatActivity {
 //                }
                 wifiScanner.startScan();
             }
-         },15000);
+         },20000);
     }
 
     private BroadcastReceiver registeringReceiver = new BroadcastReceiver() {

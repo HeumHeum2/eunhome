@@ -34,4 +34,6 @@
     <string name="finish">완료</string>
     <string name="off">OFF</string>
     <string name="on">ON</string>
+    <string name="temp">%s \u2103</string>
+    <string name="humi">%s %%</string>
 </resources>

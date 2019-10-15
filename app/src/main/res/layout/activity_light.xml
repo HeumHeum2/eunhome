@@ -30,7 +30,7 @@
         app:srcCompat="@drawable/ic_light_on" />
 
     <ProgressBar
-        android:id="@+id/deviceProgressBar"
+        android:id="@+id/lightProgressBar"
         style="?android:attr/progressBarStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

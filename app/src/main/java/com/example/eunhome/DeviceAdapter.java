@@ -52,6 +52,8 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
                 imgDevice.setImageResource(R.drawable.ic_light);
             }else if(device.contains("CCTV")){
                 imgDevice.setImageResource(R.drawable.ic_linked_camera);
+            }else if(device.contains("AirCon")){
+                imgDevice.setImageResource(R.drawable.ic_toys);
             }
         }
 
@@ -70,6 +72,8 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
                 intent = new Intent(context, LightActivity.class);
             }else if(device.contains("CCTV")){
                 intent = new Intent(context, CCTVActivity.class);
+            }else if(device.contains("AirCon")){
+                intent = new Intent(context, AirConActivity.class);
             }
             intent.putExtra("position", getAdapterPosition());
             context.startActivity(intent);

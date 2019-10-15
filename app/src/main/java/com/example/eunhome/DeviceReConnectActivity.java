@@ -48,9 +48,6 @@ public class DeviceReConnectActivity extends AppCompatActivity {
         ActionBar actionBar = getSupportActionBar();
         actionBar.setTitle("인터넷 연결");
 
-        //액션바 뒤로가기 설정
-        actionBar.setDisplayHomeAsUpEnabled(true);
-
         viewpagerSetting();
     }
 

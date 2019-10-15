@@ -45,6 +45,7 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
     private List<ScanResult> scanDatas; // ScanResult List
     private SharedPreferences userinfo;
     private ProgressBar LoadingBar;
+    private String Djson;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,17 +130,9 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
         delayHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-//                if(wifiScanner.isScanAlwaysAvailable()) {
-//                    Log.e(TAG, "와이파이 활성화");
-//                    wifiScanner.startScan();
-//                }else{
-//                    Log.e(TAG, "와이파이 비활성화");
-//                    wifiScanner.setWifiEnabled(true);
-//                    scanWifi();
-//                }
                 wifiScanner.startScan();
             }
-         },15000);
+         },20000);
     }
 
     private BroadcastReceiver registeringReceiver = new BroadcastReceiver() {
@@ -194,6 +187,7 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
         userinfo = getSharedPreferences("userinfo",MODE_PRIVATE);
         Gson gson = new Gson();
         String json = userinfo.getString("user","");
+        Djson = userinfo.getString("device","");
         UserInfo user = gson.fromJson(json, UserInfo.class);
         String email = user.getEmail();
         ClientFactory.init(this); // AWSAppSyncClient 등록
@@ -215,16 +209,23 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
                 public void run() {
                     LoadingBar.setVisibility(View.GONE);
                     ArrayList<String> devices = new ArrayList<>();
-                    devices.add(APssid);
                     ArrayList<String> devicesName = new ArrayList<>();
-                    devicesName.add(device);
-
-                    UserInfo userInfo = new UserInfo();
-                    userInfo.setDevices(devices);
-                    userInfo.setDevices_name(devicesName);
-
-                    SharedPreferences.Editor editor = userinfo.edit();
                     Gson gson = new Gson();
+                    UserInfo userInfo;
+                    if(!Djson.isEmpty()){
+                        userInfo = gson.fromJson(Djson, UserInfo.class);
+                        devices = userInfo.getDevices();
+                        devicesName = userInfo.getDevices_name();
+                        devices.add(APssid);
+                        devicesName.add(device);
+                    }else{
+                        userInfo = new UserInfo();
+                        devices.add(APssid);
+                        devicesName.add(device);
+                        userInfo.setDevices(devices);
+                        userInfo.setDevices_name(devicesName);
+                    }
+                    SharedPreferences.Editor editor = userinfo.edit();
                     String json = gson.toJson(userInfo);
                     editor.putString("device", json);
                     editor.apply();

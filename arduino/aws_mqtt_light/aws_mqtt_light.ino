@@ -279,8 +279,6 @@ void loop()
       Serial.print("Publish message: ");
       Serial.println(msg);
       client.publish(topic, msg);
-//      Serial.print("Heap: ");
-//      Serial.println(ESP.getFreeHeap()); //Low heap can cause problems
     }
   }
   

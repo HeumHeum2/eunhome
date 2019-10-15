@@ -10,12 +10,16 @@
 #define PIN_DHT D4
 
 ESP8266WebServer server;
+
 //센서 연결
-uint8_t pin_led = 13;   // D7 = GPIO13
 DHT DHTsensor(PIN_DHT, DHT11); // 온습도 센서 연결
+uint8_t pin_led = 13;   // D7 = GPIO13
+uint8_t pin_yello_led = 14; // D5 = GPI14
 uint8_t button = 12; // D6 = GPIO12
 int btn = 0; // 버튼 클릭 값을 저장할 변수
-char* ch_value = "";
+char* ch_value = ""; // 전원 확인 값
+float temp = 0; // 온도
+float humidity = 0; // 습도
 
 //AP - STA 모드 연결 위한 세팅
 char* ssid = "YOUR_SSID"; //굳이 설정해주지 않아도 됌.
@@ -116,12 +120,12 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print(message);
   Serial.println();
   
-//  int ret = strcmp(message, "ON");
-//  if(ret == 0){
-//    digitalWrite(pin_red_led, HIGH);
-//  }else{
-//    digitalWrite(pin_red_led, LOW);
-//  }
+  int ret = strcmp(message, "ON");
+  if(ret == 0){
+    digitalWrite(pin_yello_led, HIGH);
+  }else if(strcmp(message, "OFF") == 0){
+    digitalWrite(pin_yello_led, LOW);
+  }
 }
 
 //AWS IoT 인증서 세팅
@@ -139,7 +143,14 @@ void reconnect() {
     if (client.connect(thingId)) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish(topic, ch_value);
+      char message[50];
+      StaticJsonBuffer<200> jsonBuffer;
+      JsonObject& root = jsonBuffer.createObject();
+      root["tempvalue"] = temp;
+      root["humivalue"] = humidity;
+      root.printTo(message);
+      client.publish(topic, message);
+      
       // ... and resubscribe
       client.subscribe("inTopic/AirCon");
     } else {
@@ -232,6 +243,8 @@ function myFunction()
 void setup()
 {
   pinMode(pin_led, OUTPUT); // D7에 led 연결
+  pinMode(pin_yello_led, OUTPUT); // 전원 확인 센서
+  
   DHTsensor.begin();//온습도 센서
   pinMode(button,INPUT_PULLUP); // D2에 버튼 연결
   Serial.begin(115200); // 시리얼 통신 시작
@@ -245,6 +258,7 @@ void setup()
 //mqtt 메시지 보내는 것
 long lastMsg = 0;
 char msg[50];
+char message[50];
 
 void loop()
 {    
@@ -274,19 +288,28 @@ void loop()
       
     if (now - lastMsg > 5000) { //5초마다 메시지를 보내겠다.
       lastMsg = now; // 현재 시간을 저장
-      float temp = DHTsensor.readTemperature();
-      float humidity = DHTsensor.readHumidity();
+      if(digitalRead(pin_yello_led) == LOW){
+        ch_value = "OFF";
+      }else{
+        ch_value = "ON";
+      }
+      snprintf(message, 75, ch_value);
+      client.publish(topic,message);
       
-      StaticJsonBuffer<200> jsonBuffer;
-      JsonObject& root = jsonBuffer.createObject();
-      root["tempvalue"] = temp;
-      root["humivalue"] = humidity;
+      if(ch_value == "ON"){
+        temp = DHTsensor.readTemperature(); // 온도 값
+        humidity = DHTsensor.readHumidity(); // 습도 값
+      
+        StaticJsonBuffer<200> jsonBuffer;
+        JsonObject& root = jsonBuffer.createObject();
+        root["tempvalue"] = temp;
+        root["humivalue"] = humidity;
 
-      root.printTo(msg);
-//      snprintf (msg, 75, ch_value);
-      Serial.print("Publish message: ");
-      Serial.println(msg);
-      client.publish(topic, msg);
+        root.printTo(msg);
+        Serial.print("Publish message: ");
+        Serial.println(msg);
+        client.publish(topic, msg);
+      }
     }
   }
   
