@@ -9,7 +9,7 @@ ESP8266WebServer server;
 //센서 연결
 uint8_t pin_led = 13;   // D7 = GPIO13
 uint8_t pin_red_led = 14; // D5 = GPI14
-uint8_t button = 12; // D6 = GPIO12
+uint8_t button = 0; // flash button
 int btn = 0; // 버튼 클릭 값을 저장할 변수
 char* ch_value = ""; // 센서상태를 메시지로 보낼 변수
 

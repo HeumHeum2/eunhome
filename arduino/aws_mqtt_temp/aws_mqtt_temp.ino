@@ -13,9 +13,12 @@ ESP8266WebServer server;
 
 //센서 연결
 DHT DHTsensor(PIN_DHT, DHT11); // 온습도 센서 연결
+
 uint8_t pin_led = 13;   // D7 = GPIO13
 uint8_t pin_yellow_led = 14; // D5 = GPI14
-uint8_t button = 12; // D6 = GPIO12
+uint8_t button = 0; // flash button
+uint8_t fen = 4; // D2 = GPIO4 모터A의 B를 4번 핀에 배치(pwm을 이용하기 때문에 pinMode 설정 안해도 됨)
+
 int btn = 0; // 버튼 클릭 값을 저장할 변수
 char* ch_value = ""; // 전원 확인 값
 float temp = 0; // 온도
@@ -124,16 +127,19 @@ void callback(char* topic, byte* payload, unsigned int length) {
   if(ret == 0){
     digitalWrite(pin_yellow_led, LOW);
     //모터 종료
+    analogWrite(fen, 1023);
   }else{
     digitalWrite(pin_yellow_led, HIGH);
     float tempSet;
     tempSet = atof(message);
     if(temp > tempSet){ // 현재온도 > 설정온도
       Serial.println("현재온도 > 설정온도");
+      analogWrite(fen, 0);
       //모터 속도 빠르게
     }else{ // 현재온도 == 설정온도 || 현재온도 < 설정온도
       Serial.println("현재온도 == 설정온도 || 현재온도 < 설정온도");
       //모터 속도 천천히
+      analogWrite(fen, 255);
     }
   }
 }
