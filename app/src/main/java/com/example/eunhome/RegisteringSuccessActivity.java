@@ -46,6 +46,8 @@ public class RegisteringSuccessActivity extends AppCompatActivity{
             imgDevice.setImageResource(R.drawable.ic_camera_white);
         }else if(device.equals("AirCon")){
             imgDevice.setImageResource(R.drawable.ic_toys_white);
+        }else if(device.equals("GasValve")){
+            imgDevice.setImageResource(R.drawable.ic_gasvalve_white);
         }
         textDevice.setText(device);
     }

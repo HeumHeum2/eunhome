@@ -3,16 +3,20 @@ package com.example.eunhome;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
@@ -33,6 +37,9 @@ import com.apollographql.apollo.api.Response;
 import com.apollographql.apollo.exception.ApolloException;
 import com.google.gson.Gson;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
@@ -40,14 +47,15 @@ import javax.annotation.Nonnull;
 
 import type.UpdateUserInput;
 
-public class LightActivity extends AppCompatActivity implements View.OnClickListener {
+public class GasValveActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private static final String TAG = "LightActivity";
-    private String topic = "outTopic/Light";
-    private String inTopic = "inTopic/Light";
-    private ImageView imgLightStatus;
+    private static final String TAG = "GasValveActivity";
+    private String topic = "outTopic/GasValve";
+    private String inTopic = "inTopic/GasValve";
+    private ImageView imgGasStatus;
+    private TextView textGasPpm, nowPpm;
+    private Button btGasPublish;
     private AWSIotMqttManager mqttManager;
-    private Button btLightPublish;
     private ProgressBar deviceProgressBar;
     private ArrayList<String> device;
     private ArrayList<String> devicename;
@@ -61,8 +69,7 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_light);
-
+        setContentView(R.layout.activity_gas_valve);
 
         gson = new Gson();
         position = getIntent().getIntExtra("position",9999);
@@ -79,13 +86,46 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
         init();
     }
 
+    private void init(){
+        imgGasStatus = findViewById(R.id.imgGasStatus);
+        textGasPpm = findViewById(R.id.textGasPpm);
+        btGasPublish = findViewById(R.id.btGasPublish);
+        deviceProgressBar = findViewById(R.id.gasProgressBar);
+        nowPpm = findViewById(R.id.textNowPpm);
+
+        imgGasStatus.setVisibility(View.INVISIBLE);
+        textGasPpm.setVisibility(View.INVISIBLE);
+        btGasPublish.setVisibility(View.INVISIBLE);
+        nowPpm.setVisibility(View.INVISIBLE);
+
+        btGasPublish.setOnClickListener(this);
+    }
+
+    //액션바 세팅
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        getMenuInflater().inflate(R.menu.device_setting, menu);
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        if (item.getItemId() == R.id.action_rename) {
+            Log.d(TAG, "이름 변경 클릭중");
+            dialog();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     private void dialog() {
-        AlertDialog.Builder dialog = new AlertDialog.Builder(LightActivity.this);
+        AlertDialog.Builder dialog = new AlertDialog.Builder(GasValveActivity.this);
 
         dialog.setTitle("기기이름변경");
 
         //EditText 설정
-        final EditText name = new EditText(LightActivity.this);
+        final EditText name = new EditText(GasValveActivity.this);
         dialog.setView(name);
 
         name.setText(devicename.get(position));
@@ -154,16 +194,6 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
         }
     };
 
-    private void init(){
-        imgLightStatus = findViewById(R.id.imgLightStatus);
-        imgLightStatus.setVisibility(View.INVISIBLE);
-        btLightPublish = findViewById(R.id.btLightPublish);
-        btLightPublish.setVisibility(View.INVISIBLE);
-        deviceProgressBar = findViewById(R.id.lightProgressBar);
-
-        btLightPublish.setOnClickListener(this);
-    }
-
     @Override
     protected void onStart() {
         super.onStart();
@@ -177,44 +207,6 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
         mqttManager = new AWSIotMqttManager(clientid, endpoint);
         deviceProgressBar.setVisibility(View.VISIBLE);
         awsinit(clientid);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        Handler delayhandler = new Handler();
-        delayhandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Log.d(TAG, "실행");
-                if(!backcheck && deviceProgressBar.getVisibility() == View.VISIBLE){
-                    Toast.makeText(getApplicationContext(),"인터넷 신호가 약합니다. 다시 연결해주세요.",Toast.LENGTH_LONG).show();
-                    Intent intent = new Intent(LightActivity.this, DeviceReConnectActivity.class);
-                    intent.putExtra("device",device.get(position));
-                    intent.putExtra("position",position);
-                    startActivity(intent);
-                }
-            }
-        }, 10000); // 시간설정
-    }
-
-    //액션바 세팅
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu){
-        getMenuInflater().inflate(R.menu.device_setting, menu);
-
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item){
-        if (item.getItemId() == R.id.action_rename) {
-            Log.d(TAG, "이름 변경 클릭중");
-            dialog();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     public void awsinit(final String clientid){
@@ -246,6 +238,8 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
                     Log.d(TAG, "Connection Status :  "+status);
                     if(status.toString().equals("Connected")){
                         subscribe();
+                    }else if(status.toString().equals("Reconnecting")){
+                        mqttManager.disconnect();
                     }
                 }
             });
@@ -270,20 +264,38 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
                                         Log.d(TAG, "Message arrived:");
                                         Log.d(TAG, "Topic: " + topic);
                                         Log.d(TAG, "Message: " + message);
-                                        if(message.equals("ON")){
-                                            imgLightStatus.setVisibility(View.VISIBLE);
-                                            btLightPublish.setVisibility(View.VISIBLE);
-                                            imgLightStatus.setImageResource(R.drawable.ic_light_on);
-                                            btLightPublish.setText(R.string.off);
-                                        }else if(message.equals("OFF")){
-                                            imgLightStatus.setVisibility(View.VISIBLE);
-                                            btLightPublish.setVisibility(View.VISIBLE);
-                                            imgLightStatus.setImageResource(R.drawable.ic_light_off);
-                                            btLightPublish.setText(R.string.on);
+                                        JSONObject jsonObject = new JSONObject(message);
+                                        int ppm = jsonObject.getInt("gasvalue");
+                                        String gasvalve = jsonObject.getString("gasstatus");
+                                        Log.d(TAG, "ppm: " + ppm);
+                                        Log.d(TAG, "gasvalve: " + gasvalve);
+                                        if(ppm < 700){
+                                            textGasPpm.setTextColor(Color.parseColor("#46A24A"));
+                                        }else if(ppm < 1000){
+                                            textGasPpm.setTextColor(Color.parseColor("#FF9800"));
+                                        }else{
+                                            textGasPpm.setTextColor(Color.parseColor("#FF0000"));
+                                        }
+                                        textGasPpm.setText(getString(R.string.gas,ppm));
+                                        textGasPpm.setVisibility(View.VISIBLE);
+                                        if(gasvalve.equals("ON")){
+                                            imgGasStatus.setVisibility(View.VISIBLE);
+                                            btGasPublish.setVisibility(View.VISIBLE);
+                                            nowPpm.setVisibility(View.VISIBLE);
+                                            imgGasStatus.setRotation(0); // 켜져있는 이미지
+                                            btGasPublish.setText(R.string.off);
+                                        }else if(gasvalve.equals("OFF")){
+                                            imgGasStatus.setVisibility(View.VISIBLE);
+                                            btGasPublish.setVisibility(View.VISIBLE);
+                                            nowPpm.setVisibility(View.VISIBLE);
+                                            imgGasStatus.setRotation(990); // 꺼져있는 이미지
+                                            btGasPublish.setText(R.string.on);
                                         }
                                         deviceProgressBar.setVisibility(View.GONE);
                                     } catch (UnsupportedEncodingException e) {
                                         Log.e(TAG, "Message encoding error.", e);
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
                                     }
                                 }
                             });
@@ -295,39 +307,56 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
     }
 
     @Override
-    public void onClick(View v) {
-        if (v.getId() == R.id.btLightPublish) {
-            String strPublish = btLightPublish.getText().toString();
-            if (!strPublish.isEmpty()) {
-                Log.d(TAG, "onClick: 비어있지 않아!");
-                publish(strPublish);
-            }
-        }
-    }
-
-    @Override
     public void onBackPressed() {
         super.onBackPressed();
         backcheck = true;
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        Handler delayhandler = new Handler();
+        delayhandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "실행");
+                if(!backcheck && deviceProgressBar.getVisibility() == View.VISIBLE){
+                    Toast.makeText(getApplicationContext(),"인터넷 신호가 약합니다. 다시 연결해주세요.",Toast.LENGTH_LONG).show();
+                    Intent intent = new Intent(GasValveActivity.this, DeviceReConnectActivity.class);
+                    intent.putExtra("device",device.get(position));
+                    intent.putExtra("position",position);
+                    startActivity(intent);
+                }
+            }
+        }, 10000); // 시간설정
+    }
+
+    @Override
+    public void onClick(View v) {
+        if(v.getId() == R.id.btGasPublish){
+            if (v.getId() == R.id.btGasPublish) {
+                String strPublish = btGasPublish.getText().toString();
+                Animation gasRotate;
+                if (!strPublish.isEmpty()) {
+                    if(strPublish.equals("ON")){
+                        gasRotate = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.gas_rotate_on);
+                        imgGasStatus.setAnimation(gasRotate);
+                    }else{
+                        gasRotate = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.gas_rotate_off);
+                        imgGasStatus.setAnimation(gasRotate);
+                    }
+                    publish(strPublish);
+                }
+            }
+        }
+    }
 
     private void publish(String message) {
         try {
             mqttManager.publishString(message, inTopic, AWSIotMqttQos.QOS0);
         } catch (Exception e) {
             Log.e(TAG, "Publish error.", e);
-        }
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        try{
-            mqttManager.disconnect();
-            backcheck = true;
-        }catch (Exception e){
-            Log.e(TAG, "Disconnect error: ", e);
         }
     }
 }

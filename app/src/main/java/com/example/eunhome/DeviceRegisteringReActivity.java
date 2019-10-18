@@ -173,6 +173,8 @@ public class DeviceRegisteringReActivity extends AppCompatActivity {
                 intent = new Intent(DeviceRegisteringReActivity.this, CCTVActivity.class);
             }else if(APssid.contains("AirCon")){
                 intent = new Intent(DeviceRegisteringReActivity.this, AirConActivity.class);
+            }else if(APssid.contains("GasValve")){
+                intent = new Intent(DeviceRegisteringReActivity.this, GasValveActivity.class);
             }
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             intent.putExtra("position",getIntent().getIntExtra("position",9999));

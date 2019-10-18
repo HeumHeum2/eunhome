@@ -54,6 +54,8 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
                 imgDevice.setImageResource(R.drawable.ic_linked_camera);
             }else if(device.contains("AirCon")){
                 imgDevice.setImageResource(R.drawable.ic_toys);
+            }else if(device.contains("GasValve")){
+                imgDevice.setImageResource(R.drawable.ic_gasvalve);
             }
         }
 
@@ -74,6 +76,8 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
                 intent = new Intent(context, CCTVActivity.class);
             }else if(device.contains("AirCon")){
                 intent = new Intent(context, AirConActivity.class);
+            }else if(device.contains("GasValve")){
+                intent = new Intent(context, GasValveActivity.class);
             }
             intent.putExtra("position", getAdapterPosition());
             context.startActivity(intent);

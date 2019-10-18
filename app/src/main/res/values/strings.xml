@@ -36,4 +36,5 @@
     <string name="on">ON</string>
     <string name="temp">%s \u2103</string>
     <string name="humi">%s %%</string>
+    <string name="gas">%d ppm</string>
 </resources>

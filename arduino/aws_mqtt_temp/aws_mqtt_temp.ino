@@ -17,7 +17,7 @@ DHT DHTsensor(PIN_DHT, DHT11); // 온습도 센서 연결
 uint8_t pin_led = 13;   // D7 = GPIO13
 uint8_t pin_yellow_led = 14; // D5 = GPI14
 uint8_t button = 0; // flash button
-uint8_t fen = 4; // D2 = GPIO4 모터A의 B를 4번 핀에 배치(pwm을 이용하기 때문에 pinMode 설정 안해도 됨)
+uint8_t fen = D2; // D2 = GPIO4 모터A의 B를 4번 핀에 배치(pwm을 이용하기 때문에 pinMode 설정 안해도 됨)
 
 int btn = 0; // 버튼 클릭 값을 저장할 변수
 char* ch_value = ""; // 전원 확인 값

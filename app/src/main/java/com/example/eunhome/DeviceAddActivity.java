@@ -36,6 +36,8 @@ public class DeviceAddActivity extends AppCompatActivity {
         integers.add(R.drawable.ic_toys);
         list.add("AirCon");
 
+        integers.add(R.drawable.ic_gasvalve);
+        list.add("GasValve");
 
         RecyclerView recyclerView = findViewById(R.id.deviceRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
