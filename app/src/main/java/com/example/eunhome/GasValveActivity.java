@@ -3,7 +3,6 @@ package com.example.eunhome;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -269,13 +268,13 @@ public class GasValveActivity extends AppCompatActivity implements View.OnClickL
                                         String gasvalve = jsonObject.getString("gasstatus");
                                         Log.d(TAG, "ppm: " + ppm);
                                         Log.d(TAG, "gasvalve: " + gasvalve);
-                                        if(ppm < 700){
-                                            textGasPpm.setTextColor(Color.parseColor("#46A24A"));
-                                        }else if(ppm < 1000){
-                                            textGasPpm.setTextColor(Color.parseColor("#FF9800"));
-                                        }else{
-                                            textGasPpm.setTextColor(Color.parseColor("#FF0000"));
-                                        }
+//                                        if(ppm < 700){
+//                                            textGasPpm.setTextColor(Color.parseColor("#46A24A"));
+//                                        }else if(ppm < 1000){
+//                                            textGasPpm.setTextColor(Color.parseColor("#FF9800"));
+//                                        }else{
+//                                            textGasPpm.setTextColor(Color.parseColor("#FF0000"));
+//                                        }
                                         textGasPpm.setText(getString(R.string.gas,ppm));
                                         textGasPpm.setVisibility(View.VISIBLE);
                                         if(gasvalve.equals("ON")){

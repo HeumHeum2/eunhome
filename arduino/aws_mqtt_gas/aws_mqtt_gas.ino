@@ -262,13 +262,6 @@ void loop()
 {
   servo.write(pos);   // pos = 0 -> OFF // pos = 90 -> ON
   
-  gas_value = analogRead(0);
-  gas_value = (1023./(float)gas_value) * 5. - 1.* RLOAD;
-  float Resistance;
-  Resistance = gas_value;
-  float PPM;
-  PPM = PARA * pow((Resistance/RZERO), -PARB);
-  
   if(digitalRead(firePin) == 1){
     pos = 0;
   }
@@ -288,6 +281,13 @@ void loop()
   }
 
   if(_status == "WIFI_STA"){
+    gas_value = analogRead(0);
+    gas_value = (1023./(float)gas_value) * 5. - 1.* RLOAD;
+    float Resistance;
+    Resistance = gas_value;
+    float PPM;
+    PPM = PARA * pow((Resistance/RZERO), -PARB);
+    
     if (!client.connected()) {
       reconnect();
     }
