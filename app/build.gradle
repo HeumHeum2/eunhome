@@ -51,5 +51,5 @@ dependencies {
     implementation 'com.amazonaws:aws-android-sdk-ddb:2.16.+'
     //For AWSIoT only:
     implementation 'com.amazonaws:aws-android-sdk-iot:2.16.+'
-
+    implementation 'com.kakao.sdk:newtone:6.1.4'
 }

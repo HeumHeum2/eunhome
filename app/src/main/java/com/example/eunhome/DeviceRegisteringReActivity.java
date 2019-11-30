@@ -57,8 +57,7 @@ public class DeviceRegisteringReActivity extends AppCompatActivity {
                 .setPermissionListener(permissionlistener)
                 .setRationaleConfirmText("권한이 필요해요")
                 .setDeniedMessage("왜 거부하셨어요...\n하지만 [설정] > [권한] 에서 권한을 허용할 수 있어요.")
-                .setPermissions(Manifest.permission.ACCESS_COARSE_LOCATION)
-                .setPermissions(Manifest.permission.CHANGE_WIFI_STATE)
+                .setPermissions(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.CHANGE_WIFI_STATE)
                 .check();
 
         String url = "http://192.168.4.2/settings.html";

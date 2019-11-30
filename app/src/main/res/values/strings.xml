@@ -37,4 +37,5 @@
     <string name="temp">%s \u2103</string>
     <string name="humi">%s %%</string>
     <string name="gas">%d ppm</string>
+    <string name="kakao_app_key">2570b7d26ff6ce216a72feda94874815</string>
 </resources>

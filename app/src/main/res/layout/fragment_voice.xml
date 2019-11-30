@@ -1,18 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/textView4"
+    <ListView
+        android:id="@+id/VoiceListView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@color/colorGreen"
+        app:layout_constraintBottom_toTopOf="@+id/guideline40"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+    </ListView>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline40"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="음성인식"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_begin="400dp" />
+
+    <ImageButton
+        android:id="@+id/com_kakao_sdk_asr_button_voice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="@drawable/com_kakao_sdk_asr_bg_focus_selector"
+        android:contentDescription="@string/com_kakao_sdk_asr_voice_button_description"
+        android:padding="5dp"
+        android:src="@drawable/com_kakao_sdk_asr_bt_voice_record_selector"
+        app:layout_constraintBottom_toTopOf="@+id/com_kakao_sdk_asr_button_kakao"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/VoiceListView"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <ImageButton
+        android:id="@+id/com_kakao_sdk_asr_button_kakao"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left|top"
+        android:layout_margin="5dp"
+        android:background="@drawable/com_kakao_sdk_asr_bg_focus_selector"
+        android:contentDescription="@string/com_kakao_sdk_asr_kakao_button_description"
+        android:padding="5dp"
+        android:src="@drawable/com_kakao_sdk_asr_bt_kakao_selector"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/com_kakao_sdk_asr_button_voice" />
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

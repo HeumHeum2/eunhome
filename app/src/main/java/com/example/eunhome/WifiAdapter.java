@@ -1,8 +1,6 @@
 package com.example.eunhome;
 
-import android.animation.ValueAnimator;
 import android.content.Context;
-import android.database.DataSetObserver;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;

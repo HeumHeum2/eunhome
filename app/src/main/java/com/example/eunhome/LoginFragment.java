@@ -22,11 +22,19 @@ import com.amazonaws.mobile.client.Callback;
 import com.amazonaws.mobile.client.UserStateDetails;
 import com.amazonaws.mobile.client.results.SignInResult;
 import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers;
+import com.amazonaws.mobileconnectors.iot.AWSIotMqttClientStatusCallback;
+import com.amazonaws.mobileconnectors.iot.AWSIotMqttManager;
+import com.amazonaws.mobileconnectors.iot.AWSIotMqttNewMessageCallback;
+import com.amazonaws.mobileconnectors.iot.AWSIotMqttQos;
+import com.amazonaws.regions.Region;
+import com.amazonaws.services.iot.AWSIotClient;
+import com.amazonaws.services.iot.model.AttachPolicyRequest;
 import com.apollographql.apollo.GraphQLCall;
 import com.apollographql.apollo.api.Response;
 import com.apollographql.apollo.exception.ApolloException;
 import com.google.gson.Gson;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
@@ -45,6 +53,10 @@ public class LoginFragment extends Fragment {
     private SharedPreferences userinfo;
     private SharedPreferences.Editor editor;
     private Gson gson;
+    private AWSIotMqttManager mqttManager;
+    private ArrayList<String> devices = new ArrayList<>();
+    private ArrayList<String> devices_name = new ArrayList<>();
+    private ArrayList<String> devices_status = new ArrayList<>();
 
     //프로그래스 다이얼로그
     private com.example.eunhome.ProgressDialog progressDialog;
@@ -176,17 +188,26 @@ public class LoginFragment extends Fragment {
     private GraphQLCall.Callback<ListUsersQuery.Data> usersCallback = new GraphQLCall.Callback<ListUsersQuery.Data>() {
         @Override
         public void onResponse(@Nonnull Response<ListUsersQuery.Data> response) {
-            ArrayList<String> devices = new ArrayList<>();
-            ArrayList<String> devices_name = new ArrayList<>();
+            String clientid = AWSMobileClient.getInstance().getIdentityId();
+            String endpoint = "a2lewy1etbgc6q-ats.iot.ap-northeast-2.amazonaws.com";
+            mqttManager = new AWSIotMqttManager(clientid, endpoint);
             for(int i = 0 ; i < response.data().listUsers().items().size() ; i++){
-                if(email.getText().toString().trim().equals(response.data().listUsers().items().get(i).name())){
-                    devices.add(response.data().listUsers().items().get(i).id());
-                    devices_name.add(response.data().listUsers().items().get(i).device());
+                ListUsersQuery.Item item = response.data().listUsers().items().get(i);
+                if(email.getText().toString().trim().equals(item.name())){
+                    if(item.id().contains("Light") || item.id().contains("AirCon")){ // 온/오프 필요할 때마다 추가시켜줘야하나?
+                        Log.e(TAG, "item.id() 반복문 확인");
+                        awsinit(clientid, item.id());
+                    }else{
+                        devices_status.add("");
+                    }
+                    devices.add(item.id());
+                    devices_name.add(item.device());
                 }
             }
             UserInfo user = new UserInfo();
             user.setDevices(devices);
             user.setDevices_name(devices_name);
+            user.setDevices_status(devices_status);
             String json = gson.toJson(user);
             editor.putString("device", json);
             editor.apply();
@@ -197,11 +218,6 @@ public class LoginFragment extends Fragment {
             startActivity(intent);
             getActivity().finish();
             Looper.loop();
-//            runOnUiThread(new Runnable(){
-//                @Override
-//                public void run() {
-//                }
-//            });
         }
 
         @Override
@@ -209,4 +225,73 @@ public class LoginFragment extends Fragment {
             Log.e("ERROR", e.toString());
         }
     };
+
+    private void awsinit(final String clientid, final String diviceID) {
+        Thread setting = new Thread(new Runnable() {
+            @Override
+            public void run(){
+                AttachPolicyRequest attachPolicyRequest = new AttachPolicyRequest();
+                attachPolicyRequest.setPolicyName("IoTPolicy");
+                attachPolicyRequest.setTarget(clientid);
+                AWSIotClient mIoTAndroidClient = new AWSIotClient(AWSMobileClient.getInstance());
+                mIoTAndroidClient.setRegion(Region.getRegion("ap-northeast-2"));
+                mIoTAndroidClient.attachPolicy(attachPolicyRequest);
+                connect(diviceID);
+            }
+        });
+        setting.start();
+        try {
+            setting.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void connect(final String diviceID) {
+        try{
+            mqttManager.connect(AWSMobileClient.getInstance(), new AWSIotMqttClientStatusCallback() {
+                @Override
+                public void onStatusChanged(AWSIotMqttClientStatus status, Throwable throwable) {
+                    Log.d(TAG, "Connection Status :  "+status);
+                    if(status.toString().equals("Connected")){
+                        subscribe(diviceID);
+                    }else if(status.toString().equals("Reconnecting")){
+                        mqttManager.disconnect();
+                    }
+                }
+            });
+        }catch (final Exception e){
+            Log.e(TAG, "Connection error", e);
+        }
+    }
+
+    public void subscribe(String diviceID) {
+        StringBuffer sb = new StringBuffer("outTopic/").append(diviceID);
+        String topic = sb.toString();
+        try {
+            mqttManager.subscribeToTopic(topic, AWSIotMqttQos.QOS0,
+                    new AWSIotMqttNewMessageCallback() {
+                        @Override
+                        public void onMessageArrived(final String topic, final byte[] data) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        String message = new String(data, "UTF-8");
+                                        if(message.equals("OFF")){
+                                            devices_status.add("OFF");
+                                        }else {
+                                            devices_status.add("ON");
+                                        }
+                                    } catch (UnsupportedEncodingException e) {
+                                        Log.e(TAG, "Message encoding error.", e);
+                                    }
+                                }
+                            });
+                        }
+                    });
+        } catch (Exception e) {
+            Log.e(TAG, "Subscription error.", e);
+        }
+    }
 }

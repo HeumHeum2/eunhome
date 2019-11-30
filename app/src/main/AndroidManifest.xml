@@ -12,6 +12,7 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
     <application
         android:allowBackup="true"
@@ -24,9 +25,11 @@
 
         <!-- 안드로이드 api 28 부터는 http는 차단시키기 때문에 허용시켜줘야함 -->
         <service android:name="org.eclipse.paho.android.service.MqttService" />
+
         <activity
             android:name=".GasValveActivity"
-            android:parentActivityName=".MainActivity"></activity>
+            android:parentActivityName=".MainActivity">
+        </activity>
         <activity
             android:name=".AirConActivity"
             android:parentActivityName=".MainActivity" />
@@ -57,6 +60,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".MainActivity" />
+        <meta-data
+            android:name="com.kakao.sdk.AppKey"
+            android:value="@string/kakao_app_key" />
     </application>
-
 </manifest>

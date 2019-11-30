@@ -140,6 +140,7 @@ public class AirConActivity extends AppCompatActivity implements View.OnClickLis
 
     private void mqtt() {
         String clientid = AWSMobileClient.getInstance().getIdentityId();
+        Log.e(TAG, "mqtt: "+clientid);
         String endpoint = "a2lewy1etbgc6q-ats.iot.ap-northeast-2.amazonaws.com";
         mqttManager = new AWSIotMqttManager(clientid, endpoint);
         deviceProgressBar.setVisibility(View.VISIBLE);

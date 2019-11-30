@@ -7,4 +7,5 @@
     <color name="colorDarkYellow">#F8CC48</color>
     <color name="colorGreen">#46A24A</color>
     <color name="colorRed">#FF0000</color>
+    <color name="colorVoiceChat">#77bf8d</color>
 </resources>

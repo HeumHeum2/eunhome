@@ -1,8 +1,5 @@
 package com.example.eunhome;
 
-import android.content.Context;
-import android.view.MotionEvent;
-
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
