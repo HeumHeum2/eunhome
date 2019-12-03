@@ -35,7 +35,7 @@ public class MainActivity extends BaseActivity {
                 .setPermissionListener(permissionlistener)
                 .setRationaleConfirmText("권한이 필요해요")
                 .setDeniedMessage("왜 거부하셨어요...\n하지만 [설정] > [권한] 에서 권한을 허용할 수 있어요.")
-                .setPermissions(Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                .setPermissions(Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.ACCESS_NETWORK_STATE, Manifest.permission.INTERNET)
                 .check();
 
         FragmentTransaction transaction = fragmentManager.beginTransaction();
