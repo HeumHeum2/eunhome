@@ -32,7 +32,7 @@ char* _status = "WIFI_AP";
 //AWS IoT를 위한 세팅
 const char *thingId = "AirCon";          // 사물 이름 (thing ID) 
 const char *host = "a2lewy1etbgc6q-ats.iot.ap-northeast-2.amazonaws.com"; // AWS IoT Core 주소
-const char *topic = "outTopic/AirCon"; // 보낼 토픽
+const char *topic = "outTopic/AirCon0000"; // 보낼 토픽
 
 // 사물 인증서 (파일 이름: xxxxxxxxxx-certificate.pem.crt)
 const char cert_str[] PROGMEM = R"EOF(
@@ -168,7 +168,7 @@ void reconnect() {
       client.publish(topic, message);
       
       // ... and resubscribe
-      client.subscribe("inTopic/AirCon");
+      client.subscribe("inTopic/AirCon0000");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());

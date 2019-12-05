@@ -43,8 +43,8 @@ import type.UpdateUserInput;
 public class LightActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String TAG = "LightActivity";
-    private String topic = "outTopic/Light";
-    private String inTopic = "inTopic/Light";
+    private String outTopic;
+    private String inTopic;
     private ImageView imgLightStatus;
     private AWSIotMqttManager mqttManager;
     private Button btLightPublish;
@@ -71,6 +71,9 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
         UserInfo user = gson.fromJson(json,UserInfo.class);
         devicename = user.getDevices_name();
         device = user.getDevices();
+
+        outTopic  = "outTopic/" + device.get(position);
+        inTopic = "inTopic/" + device.get(position);
 
         actionBar = getSupportActionBar();
         actionBar.setTitle(devicename.get(position)); // gson에서 기기이름을 가져온다.
@@ -255,10 +258,10 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
     }
 
     public void subscribe() {
-        Log.d(TAG, "topic = " + topic);
+        Log.d(TAG, "topic = " + outTopic);
 
         try {
-            mqttManager.subscribeToTopic(topic, AWSIotMqttQos.QOS0,
+            mqttManager.subscribeToTopic(outTopic, AWSIotMqttQos.QOS0,
                     new AWSIotMqttNewMessageCallback() {
                         @Override
                         public void onMessageArrived(final String topic, final byte[] data) {

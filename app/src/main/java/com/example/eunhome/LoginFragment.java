@@ -26,6 +26,7 @@ import com.amazonaws.mobileconnectors.iot.AWSIotMqttClientStatusCallback;
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttManager;
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttNewMessageCallback;
 import com.amazonaws.mobileconnectors.iot.AWSIotMqttQos;
+import com.amazonaws.mobileconnectors.iot.AWSIotMqttSubscriptionStatusCallback;
 import com.amazonaws.regions.Region;
 import com.amazonaws.services.iot.AWSIotClient;
 import com.amazonaws.services.iot.model.AttachPolicyRequest;
@@ -44,6 +45,7 @@ import javax.annotation.Nonnull;
 import static com.amazonaws.mobile.auth.core.internal.util.ThreadUtils.runOnUiThread;
 
 public class LoginFragment extends Fragment {
+
     private static final String TAG= "LoginFragment";
 
     private EditText email, passwd;
@@ -197,6 +199,13 @@ public class LoginFragment extends Fragment {
                     if(item.id().contains("Light") || item.id().contains("AirCon")){ // 온/오프 필요할 때마다 추가시켜줘야하나?
                         Log.e(TAG, "item.id() 반복문 확인");
                         awsinit(clientid, item.id());
+                        synchronized (LoginFragment.this){
+                            try {
+                                LoginFragment.this.wait(); // LoginFragment 쓰레드 정지
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
                     }else{
                         devices_status.add("");
                     }
@@ -240,11 +249,6 @@ public class LoginFragment extends Fragment {
             }
         });
         setting.start();
-        try {
-            setting.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     private void connect(final String diviceID) {
@@ -268,30 +272,57 @@ public class LoginFragment extends Fragment {
     public void subscribe(String diviceID) {
         StringBuffer sb = new StringBuffer("outTopic/").append(diviceID);
         String topic = sb.toString();
+        Log.e(TAG, "topic : "+topic);
         try {
-            mqttManager.subscribeToTopic(topic, AWSIotMqttQos.QOS0,
-                    new AWSIotMqttNewMessageCallback() {
-                        @Override
-                        public void onMessageArrived(final String topic, final byte[] data) {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        String message = new String(data, "UTF-8");
-                                        if(message.equals("OFF")){
-                                            devices_status.add("OFF");
-                                        }else {
-                                            devices_status.add("ON");
-                                        }
-                                    } catch (UnsupportedEncodingException e) {
-                                        Log.e(TAG, "Message encoding error.", e);
-                                    }
-                                }
-                            });
-                        }
-                    });
+            mqttManager.subscribeToTopic(topic, AWSIotMqttQos.QOS0, statusCallback, awsIotMqttNewMessageCallback);
         } catch (Exception e) {
             Log.e(TAG, "Subscription error.", e);
         }
+    }
+
+    AWSIotMqttSubscriptionStatusCallback statusCallback = new AWSIotMqttSubscriptionStatusCallback() {
+        @Override
+        public void onSuccess() {
+            Log.e(TAG, "statusCallback onSuccess" );
+        }
+
+        @Override
+        public void onFailure(Throwable exception) {
+            Log.e(TAG, "statusCallback onFailure",exception);
+        }
+    };
+
+    AWSIotMqttNewMessageCallback awsIotMqttNewMessageCallback = new AWSIotMqttNewMessageCallback() {
+        @Override
+        public void onMessageArrived(final String topic, final byte[] data) {
+            Log.e(TAG, "onMessageArrived: ");
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        String message = new String(data, "UTF-8");
+                        Log.e(TAG, "message : " + message);
+                        if(message.equals("OFF")){
+                            devices_status.add("OFF");
+                        }else if(message.equals("ON")){
+                            devices_status.add("ON");
+                        }
+                        synchronized (LoginFragment.this){
+                            Log.e(TAG, "토픽 받아와져?" );
+                            mqttManager.unsubscribeTopic(topic);
+                            LoginFragment.this.notify(); // LoginFragment 쓰레드 깨워주기.
+                        }
+                    } catch (UnsupportedEncodingException e) {
+                        Log.e(TAG, "Message encoding error.", e);
+                    }
+                }
+            });
+        }
+    };
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        mqttManager.disconnect(); //mqtt 연결 해제
     }
 }

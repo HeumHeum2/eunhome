@@ -47,8 +47,8 @@ import type.UpdateUserInput;
 
 public class AirConActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "AirConActivity";
-    private String topic = "outTopic/AirCon";
-    private String inTopic = "inTopic/AirCon";
+    private String outTopic;
+    private String inTopic;
     private AWSIotMqttManager mqttManager;
     private ArrayList<String> device;
     private ArrayList<String> devicename;
@@ -77,6 +77,9 @@ public class AirConActivity extends AppCompatActivity implements View.OnClickLis
         UserInfo user = gson.fromJson(json,UserInfo.class);
         devicename = user.getDevices_name();
         device = user.getDevices();
+
+        outTopic = "outTopic/"+device.get(position);
+        inTopic  = "inTopic/"+device.get(position);
 
         actionBar = getSupportActionBar();
         actionBar.setTitle(devicename.get(position)); // gson에서 기기이름을 가져온다.
@@ -187,10 +190,10 @@ public class AirConActivity extends AppCompatActivity implements View.OnClickLis
     }
 
     public void subscribe() {
-        Log.d(TAG, "topic = " + topic);
+        Log.d(TAG, "outTopic = " + outTopic);
 
         try {
-            mqttManager.subscribeToTopic(topic, AWSIotMqttQos.QOS0,
+            mqttManager.subscribeToTopic(outTopic, AWSIotMqttQos.QOS0,
                     new AWSIotMqttNewMessageCallback() {
                         @Override
                         public void onMessageArrived(final String topic, final byte[] data) {
