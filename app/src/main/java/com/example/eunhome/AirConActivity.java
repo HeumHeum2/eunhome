@@ -52,9 +52,10 @@ public class AirConActivity extends AppCompatActivity implements View.OnClickLis
     private AWSIotMqttManager mqttManager;
     private ArrayList<String> device;
     private ArrayList<String> devicename;
+    private ArrayList<String> devicestatus;
     private ProgressBar deviceProgressBar;
     private int position;
-    private String changeDeviceName, powerstatus="" , tempstatus;
+    private String powerstatus="" , tempstatus;
     private SharedPreferences userinfo;
     private Gson gson;
     private ActionBar actionBar;
@@ -75,8 +76,9 @@ public class AirConActivity extends AppCompatActivity implements View.OnClickLis
         userinfo = getSharedPreferences("userinfo",MODE_PRIVATE);
         String json = userinfo.getString("device","");
         UserInfo user = gson.fromJson(json,UserInfo.class);
-        devicename = user.getDevices_name();
         device = user.getDevices();
+        devicename = user.getDevices_name();
+        devicestatus = user.getDevices_status();
 
         outTopic = "outTopic/"+device.get(position);
         inTopic  = "inTopic/"+device.get(position);
@@ -287,8 +289,8 @@ public class AirConActivity extends AppCompatActivity implements View.OnClickLis
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 Log.d(TAG, "변경 클릭");
-                changeDeviceName = name.getText().toString().trim();
-                mutation();
+                String changeDeviceName = name.getText().toString().trim();
+                mutation(changeDeviceName);
                 dialog.dismiss();
             }
         });
@@ -326,38 +328,48 @@ public class AirConActivity extends AppCompatActivity implements View.OnClickLis
         }
     }
 
-    private void mutation() {
+    private void mutation(String changeDevice) {
         ClientFactory.init(getApplicationContext());
-        UpdateUserInput updateUserInput = UpdateUserInput.builder()
-                .id(device.get(position))
-                .device(changeDeviceName)
-                .build();
+        UpdateUserInput updateUserInput;
+        UserInfo userInfo = new UserInfo();
+        if(changeDevice.equals("ON")||changeDevice.equals("OFF")){
+            updateUserInput = UpdateUserInput.builder()
+                    .id(device.get(position))
+                    .status(changeDevice)
+                    .build();
+            devicestatus.set(position,changeDevice);
+        }else{
+            updateUserInput = UpdateUserInput.builder()
+                    .id(device.get(position))
+                    .device(changeDevice)
+                    .build();
+            devicename.set(position, changeDevice);
+            actionBar.setTitle(changeDevice);
+            Toast.makeText(getApplicationContext(), "변경 되었습니다.",Toast.LENGTH_SHORT).show();
+        }
+        //쉐어드에 저장
+        userInfo.setDevices(device);
+        userInfo.setDevices_name(devicename);
+        userInfo.setDevices_status(devicestatus);
+        SharedPreferences.Editor editor = userinfo.edit();
+        String json = gson.toJson(userInfo);
+        editor.remove("device");
+        editor.putString("device",json);
+        editor.apply();
 
         UpdateUserMutation updateUserMutation = UpdateUserMutation.builder().input(updateUserInput).build();
-        ClientFactory.appSyncClient().mutate(updateUserMutation).enqueue(mutationCallback);
+        ClientFactory.appSyncClient().mutate(updateUserMutation).enqueue(nameMutationCallback);
     }
 
-    private GraphQLCall.Callback<UpdateUserMutation.Data> mutationCallback = new GraphQLCall.Callback<UpdateUserMutation.Data>() {
+    private GraphQLCall.Callback<UpdateUserMutation.Data> nameMutationCallback = new GraphQLCall.Callback<UpdateUserMutation.Data>() {
         @Override
         public void onResponse(@Nonnull final Response<UpdateUserMutation.Data> response) {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Log.i(TAG, "Update User :"+response.data().updateUser().id());
-                    Log.i(TAG, "Update User :"+response.data().updateUser().device());
-                    //쉐어드에 저장되어있던 것도 업데이트 시켜줘야함.
-                    UserInfo userInfo = new UserInfo();
-                    devicename.set(position, changeDeviceName);
-                    userInfo.setDevices(device);
-                    userInfo.setDevices_name(devicename);
-                    SharedPreferences.Editor editor = userinfo.edit();
-                    gson = new Gson();
-                    String json = gson.toJson(userInfo);
-                    editor.remove("device");
-                    editor.putString("device",json);
-                    editor.apply();
-                    actionBar.setTitle(changeDeviceName);
-                    Toast.makeText(getApplicationContext(), "변경 되었습니다.",Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, "Update User : "+response.data().updateUser().id());
+                    Log.i(TAG, "Update User : "+response.data().updateUser().device());
+                    Log.i(TAG, "Update User : "+response.data().updateUser().status());
                 }
             });
         }
@@ -398,6 +410,7 @@ public class AirConActivity extends AppCompatActivity implements View.OnClickLis
             PowerON.setVisibility(View.INVISIBLE);
             PowerOFF.setVisibility(View.INVISIBLE);
             deviceProgressBar.setVisibility(View.VISIBLE);
+            mutation(powerstatus);
             mqttManager.publishString(powerstatus, inTopic, AWSIotMqttQos.QOS0);
         } catch (Exception e) {
             Log.e(TAG, "Publish error.", e);

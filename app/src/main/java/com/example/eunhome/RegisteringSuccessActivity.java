@@ -30,7 +30,7 @@ public class RegisteringSuccessActivity extends AppCompatActivity{
     public void init(){
         device = getIntent().getStringExtra("device");
         imgDevice = findViewById(R.id.imgDevice);
-        textDevice = findViewById(R.id.textDevice);
+        textDevice = findViewById(R.id.textDeviceName);
         btDeviceClear = findViewById(R.id.btDeviceClear);
 
         setting();
@@ -42,12 +42,12 @@ public class RegisteringSuccessActivity extends AppCompatActivity{
     private void setting() {
         if(device.equals("Light")){
             imgDevice.setImageResource(R.drawable.ic_light_white);
-        }else if(device.equals("CCTV")){
-            imgDevice.setImageResource(R.drawable.ic_camera_white);
         }else if(device.equals("AirCon")){
             imgDevice.setImageResource(R.drawable.ic_toys_white);
         }else if(device.equals("GasValve")){
             imgDevice.setImageResource(R.drawable.ic_gasvalve_white);
+        }else if(device.equals("CCTV")){
+            imgDevice.setImageResource(R.drawable.ic_camera_white);
         }
         textDevice.setText(device);
     }

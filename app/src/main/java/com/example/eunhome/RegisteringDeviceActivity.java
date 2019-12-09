@@ -194,6 +194,7 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
                 .id(APssid)
                 .name(email)
                 .device(device)
+                .status("OFF")
                 .build();
         CreateUserMutation addUserMutation = CreateUserMutation.builder().input(input).build();
         ClientFactory.appSyncClient().mutate(addUserMutation).enqueue(mutateCallback);
@@ -209,20 +210,26 @@ public class RegisteringDeviceActivity extends AppCompatActivity {
                     LoadingBar.setVisibility(View.GONE);
                     ArrayList<String> devices = new ArrayList<>();
                     ArrayList<String> devicesName = new ArrayList<>();
+                    ArrayList<String> devicesStatus = new ArrayList<>();
                     Gson gson = new Gson();
                     UserInfo userInfo;
+
                     if(!Djson.isEmpty()){
                         userInfo = gson.fromJson(Djson, UserInfo.class);
                         devices = userInfo.getDevices();
                         devicesName = userInfo.getDevices_name();
+                        devicesStatus = userInfo.getDevices_status();
                         devices.add(APssid);
                         devicesName.add(device);
+                        devicesStatus.add("OFF");
                     }else{
                         userInfo = new UserInfo();
                         devices.add(APssid);
                         devicesName.add(device);
+                        devicesStatus.add("OFF");
                         userInfo.setDevices(devices);
                         userInfo.setDevices_name(devicesName);
+                        userInfo.setDevices_status(devicesStatus);
                     }
                     SharedPreferences.Editor editor = userinfo.edit();
                     String json = gson.toJson(userInfo);

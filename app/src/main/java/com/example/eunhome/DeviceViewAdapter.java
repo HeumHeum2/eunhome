@@ -29,7 +29,7 @@ public class DeviceViewAdapter extends RecyclerView.Adapter<DeviceViewAdapter.Vi
             super(itemView);
 
             imageDevice = itemView.findViewById(R.id.imageDevice);
-            textDevice = itemView.findViewById(R.id.textDevice);
+            textDevice = itemView.findViewById(R.id.textDeviceName);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override

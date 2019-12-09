@@ -32,7 +32,7 @@ char* _status = "WIFI_AP";
 //AWS IoT를 위한 세팅
 const char *thingId = "GasValve";          // 사물 이름 (thing ID) 
 const char *host = "a2lewy1etbgc6q-ats.iot.ap-northeast-2.amazonaws.com"; // AWS IoT Core 주소
-const char *topic = "outTopic/GasValve"; // 보낼 토픽
+const char *topic = "outTopic/GasValve0000"; // 보낼 토픽
 
 // 사물 인증서 (파일 이름: xxxxxxxxxx-certificate.pem.crt)
 const char cert_str[] PROGMEM = R"EOF(
@@ -149,7 +149,7 @@ void reconnect() {
       // Once connected, publish an announcement...
       client.publish(topic, ch_value);
       // ... and resubscribe
-      client.subscribe("inTopic/GasValve");
+      client.subscribe("inTopic/GasValve0000");
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
@@ -274,7 +274,7 @@ void loop()
     if (!configFile) {
       Serial.println("file open failed");
     }
-    jObject.printTo(configFile);  
+    jObject.printTo(configFile);
     configFile.close();
     client.disconnect();
     wifiConnect();

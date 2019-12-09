@@ -4,6 +4,7 @@ mutation CreateUser($input: CreateUserInput!) {
     id
     name
     device
+    status
   }
 }
 mutation UpdateUser($input: UpdateUserInput!) {
@@ -11,6 +12,7 @@ mutation UpdateUser($input: UpdateUserInput!) {
     id
     name
     device
+    status
   }
 }
 mutation DeleteUser($input: DeleteUserInput!) {
@@ -18,5 +20,6 @@ mutation DeleteUser($input: DeleteUserInput!) {
     id
     name
     device
+    status
   }
 }

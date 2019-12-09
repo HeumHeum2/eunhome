@@ -4,6 +4,7 @@ query GetUser($id: ID!) {
     id
     name
     device
+    status
   }
 }
 query ListUsers(
@@ -16,6 +17,7 @@ query ListUsers(
       id
       name
       device
+      status
     }
     nextToken
   }

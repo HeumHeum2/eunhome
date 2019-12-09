@@ -2,4 +2,5 @@ type User @model {
   id: ID!
   name: String!
   device: String
+  status: String
 }

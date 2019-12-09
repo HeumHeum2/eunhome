@@ -41,7 +41,7 @@
         android:id="@+id/imgDevice"
         android:layout_width="120dp"
         android:layout_height="120dp"
-        app:layout_constraintBottom_toTopOf="@+id/textDevice"
+        app:layout_constraintBottom_toTopOf="@+id/textDeviceName"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
@@ -50,7 +50,7 @@
         app:srcCompat="@drawable/ic_camera_white" />
 
     <TextView
-        android:id="@+id/textDevice"
+        android:id="@+id/textDeviceName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="CCTV"

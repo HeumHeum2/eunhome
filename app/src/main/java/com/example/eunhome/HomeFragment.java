@@ -34,6 +34,7 @@ public class HomeFragment extends Fragment {
     private DeviceAdapter adapter;
     private ArrayList<String> devices;
     private ArrayList<String> devicesName;
+    private ArrayList<String> devicesStatus;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -66,6 +67,7 @@ public class HomeFragment extends Fragment {
         UserInfo user = gson.fromJson(json, UserInfo.class);
         devices = user.getDevices();
         devicesName = user.getDevices_name();
+        devicesStatus = user.getDevices_status();
 
         try{
             if(!devices.get(0).isEmpty()){
@@ -84,7 +86,7 @@ public class HomeFragment extends Fragment {
         userDeviceRecyclerView = view.findViewById(R.id.userDeviceRecyclerView);
         userDeviceRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new DeviceAdapter(getContext());
-        adapter.setItems(devices, devicesName);
+        adapter.setItems(devices, devicesName, devicesStatus);
         userDeviceRecyclerView.setAdapter(adapter);
 
 //        SwipeController swipeController = new SwipeController();

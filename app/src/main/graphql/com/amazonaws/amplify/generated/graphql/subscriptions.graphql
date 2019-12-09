@@ -4,6 +4,7 @@ subscription OnCreateUser {
     id
     name
     device
+    status
   }
 }
 subscription OnUpdateUser {
@@ -11,6 +12,7 @@ subscription OnUpdateUser {
     id
     name
     device
+    status
   }
 }
 subscription OnDeleteUser {
@@ -18,5 +20,6 @@ subscription OnDeleteUser {
     id
     name
     device
+    status
   }
 }

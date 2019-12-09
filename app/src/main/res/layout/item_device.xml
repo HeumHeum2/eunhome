@@ -34,7 +34,7 @@
             app:srcCompat="@drawable/ic_linked_camera" />
 
         <TextView
-            android:id="@+id/textDevice"
+            android:id="@+id/textDeviceName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="카메라"

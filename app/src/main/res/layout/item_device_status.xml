@@ -34,7 +34,7 @@
             app:srcCompat="@drawable/ic_linked_camera" />
 
         <TextView
-            android:id="@+id/textDevice"
+            android:id="@+id/textDeviceName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="30sp"
@@ -59,7 +59,7 @@
             app:layout_constraintGuide_percent="0.55" />
 
         <TextView
-            android:id="@+id/textDeviceStatus"
+            android:id="@+id/textDeviceID"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="invisible"
@@ -68,18 +68,17 @@
             app:layout_constraintStart_toStartOf="@+id/guideline37"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!--        <TextView-->
-<!--            android:id="@+id/textView15"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="ON"-->
-<!--            android:textSize="30sp"-->
-<!--            android:textColor="@color/colorGreen"-->
-<!--            app:layout_constraintBottom_toBottomOf="parent"-->
-<!--            app:layout_constraintEnd_toEndOf="parent"-->
-<!--            app:layout_constraintHorizontal_bias="0.9"-->
-<!--            app:layout_constraintStart_toStartOf="@+id/guideline37"-->
-<!--            app:layout_constraintTop_toTopOf="parent" />-->
+        <TextView
+            android:id="@+id/textDeviceStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="30sp"
+            android:textColor="@color/colorGreen"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.9"
+            app:layout_constraintStart_toStartOf="@+id/guideline37"
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
