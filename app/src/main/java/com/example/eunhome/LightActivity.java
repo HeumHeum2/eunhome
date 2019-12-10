@@ -51,8 +51,8 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
     private ProgressBar deviceProgressBar;
     private ArrayList<String> device;
     private ArrayList<String> devicename;
+    private ArrayList<String> devicestatus;
     private int position;
-    private String changeDeviceName;
     private SharedPreferences userinfo;
     private Gson gson;
     private ActionBar actionBar;
@@ -63,14 +63,14 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_light);
 
-
         gson = new Gson();
         position = getIntent().getIntExtra("position",9999);
         userinfo = getSharedPreferences("userinfo",MODE_PRIVATE);
         String json = userinfo.getString("device","");
         UserInfo user = gson.fromJson(json,UserInfo.class);
-        devicename = user.getDevices_name();
         device = user.getDevices();
+        devicename = user.getDevices_name();
+        devicestatus = user.getDevices_status();
 
         outTopic  = "outTopic/" + device.get(position);
         inTopic = "inTopic/" + device.get(position);
@@ -80,6 +80,16 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
         actionBar.setDisplayHomeAsUpEnabled(true);
 
         init();
+    }
+
+    private void init(){
+        imgLightStatus = findViewById(R.id.imgLightStatus);
+        imgLightStatus.setVisibility(View.INVISIBLE);
+        btLightPublish = findViewById(R.id.btLightPublish);
+        btLightPublish.setVisibility(View.INVISIBLE);
+        deviceProgressBar = findViewById(R.id.lightProgressBar);
+
+        btLightPublish.setOnClickListener(this);
     }
 
     private void dialog() {
@@ -98,8 +108,8 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 Log.d(TAG, "변경 클릭");
-                changeDeviceName = name.getText().toString().trim();
-                mutation();
+                String changeDeviceName = name.getText().toString().trim();
+                mutation(changeDeviceName);
                 dialog.dismiss();
             }
         });
@@ -115,12 +125,34 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
         dialog.show();
     }
 
-    private void mutation() {
+    private void mutation(String changeDevice) {
         ClientFactory.init(getApplicationContext());
-        UpdateUserInput updateUserInput = UpdateUserInput.builder()
-                .id(device.get(position))
-                .device(changeDeviceName)
-                .build();
+        UpdateUserInput updateUserInput;
+        UserInfo userInfo = new UserInfo();
+        if(changeDevice.equals("ON")||changeDevice.equals("OFF")){
+            updateUserInput = UpdateUserInput.builder()
+                    .id(device.get(position))
+                    .status(changeDevice)
+                    .build();
+            devicestatus.set(position,changeDevice);
+        }else{
+            updateUserInput = UpdateUserInput.builder()
+                    .id(device.get(position))
+                    .device(changeDevice)
+                    .build();
+            devicename.set(position, changeDevice);
+            actionBar.setTitle(changeDevice);
+            Toast.makeText(getApplicationContext(), "변경 되었습니다.",Toast.LENGTH_SHORT).show();
+        }
+        //쉐어드에 저장
+        userInfo.setDevices(device);
+        userInfo.setDevices_name(devicename);
+        userInfo.setDevices_status(devicestatus);
+        SharedPreferences.Editor editor = userinfo.edit();
+        String json = gson.toJson(userInfo);
+        editor.remove("device");
+        editor.putString("device",json);
+        editor.apply();
 
         UpdateUserMutation updateUserMutation = UpdateUserMutation.builder().input(updateUserInput).build();
         ClientFactory.appSyncClient().mutate(updateUserMutation).enqueue(mutationCallback);
@@ -134,19 +166,7 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
                 public void run() {
                     Log.i(TAG, "Update User :"+response.data().updateUser().id());
                     Log.i(TAG, "Update User :"+response.data().updateUser().device());
-                    //쉐어드에 저장되어있던 것도 업데이트 시켜줘야함.
-                    UserInfo userInfo = new UserInfo();
-                    devicename.set(position, changeDeviceName);
-                    userInfo.setDevices(device);
-                    userInfo.setDevices_name(devicename);
-                    SharedPreferences.Editor editor = userinfo.edit();
-                    gson = new Gson();
-                    String json = gson.toJson(userInfo);
-                    editor.remove("device");
-                    editor.putString("device",json);
-                    editor.apply();
-                    actionBar.setTitle(changeDeviceName);
-                    Toast.makeText(getApplicationContext(), "변경 되었습니다.",Toast.LENGTH_SHORT).show();
+                    Log.i(TAG, "Update User :"+response.data().updateUser().status());
                 }
             });
         }
@@ -156,16 +176,6 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
 
         }
     };
-
-    private void init(){
-        imgLightStatus = findViewById(R.id.imgLightStatus);
-        imgLightStatus.setVisibility(View.INVISIBLE);
-        btLightPublish = findViewById(R.id.btLightPublish);
-        btLightPublish.setVisibility(View.INVISIBLE);
-        deviceProgressBar = findViewById(R.id.lightProgressBar);
-
-        btLightPublish.setOnClickListener(this);
-    }
 
     @Override
     protected void onStart() {
@@ -301,10 +311,12 @@ public class LightActivity extends AppCompatActivity implements View.OnClickList
     public void onClick(View v) {
         if (v.getId() == R.id.btLightPublish) {
             String strPublish = btLightPublish.getText().toString();
-            if (!strPublish.isEmpty()) {
-                Log.d(TAG, "onClick: 비어있지 않아!");
-                publish(strPublish);
-            }
+            Log.d(TAG, "onClick: 비어있지 않아!");
+            imgLightStatus.setVisibility(View.INVISIBLE);
+            btLightPublish.setVisibility(View.INVISIBLE);
+            deviceProgressBar.setVisibility(View.VISIBLE);
+            mutation(strPublish);
+            publish(strPublish);
         }
     }
 

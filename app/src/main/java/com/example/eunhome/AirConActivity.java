@@ -264,6 +264,7 @@ public class AirConActivity extends AppCompatActivity implements View.OnClickLis
                 Log.d(TAG, "실행");
                 if(!backcheck && PowerSet.getVisibility() == View.INVISIBLE){
                     Toast.makeText(getApplicationContext(),"인터넷 신호가 약합니다. 다시 연결해주세요.",Toast.LENGTH_LONG).show();
+
                     Intent intent = new Intent(AirConActivity.this, DeviceReConnectActivity.class);
                     intent.putExtra("device",device.get(position));
                     intent.putExtra("position",position);
@@ -358,10 +359,10 @@ public class AirConActivity extends AppCompatActivity implements View.OnClickLis
         editor.apply();
 
         UpdateUserMutation updateUserMutation = UpdateUserMutation.builder().input(updateUserInput).build();
-        ClientFactory.appSyncClient().mutate(updateUserMutation).enqueue(nameMutationCallback);
+        ClientFactory.appSyncClient().mutate(updateUserMutation).enqueue(mutationCallback);
     }
 
-    private GraphQLCall.Callback<UpdateUserMutation.Data> nameMutationCallback = new GraphQLCall.Callback<UpdateUserMutation.Data>() {
+    private GraphQLCall.Callback<UpdateUserMutation.Data> mutationCallback = new GraphQLCall.Callback<UpdateUserMutation.Data>() {
         @Override
         public void onResponse(@Nonnull final Response<UpdateUserMutation.Data> response) {
             runOnUiThread(new Runnable() {
